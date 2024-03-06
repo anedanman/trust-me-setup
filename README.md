@@ -33,7 +33,7 @@ Connect the workspace screen with your **workspace device**.
 The eye-tracker will be working well within (probably slightly outside of? #TODO) your calibration area.
 
 - **Does it work when I move around?**      
-Experiment shows it tolerates tilting to left/right by roughly no more than a 30-45° angle, and moving backward and forward slightly. This is related to the FOV of Tobii camera.
+The experiment shows it tolerates tilting to left/right by roughly no more than a 30-45° angle, and moving backward/forward slightly. This is related to the FOV of Tobii camera.
 
 - **Do I need to recalibrate every time before using?**       
 Unless you are changing your workspace screen size, or adjusting your seating with large distance shifts, you don’t have to recalibrate.
