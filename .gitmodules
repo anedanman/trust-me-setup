@@ -1,0 +1,3 @@
+[submodule "aw-watcher-input"]
+	path = aw-watcher-input
+	url = https://github.com/anedanman/aw-watcher-input
