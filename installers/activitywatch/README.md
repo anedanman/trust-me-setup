@@ -1,0 +1,2 @@
+First install the activity watch from the official page https://github.com/ActivityWatch/activitywatch. It supports Windows, Linux and MacOS. It will track the active window (application) and log the title of the window.
+ Then install the activity watch extension for browser (https://github.com/ActivityWatch/aw-watcher-web), it will track the active browser tab and log urls and titles of the websites you visit. It supports Firefox and Chrome.
