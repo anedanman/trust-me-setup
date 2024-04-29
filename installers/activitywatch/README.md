@@ -18,7 +18,7 @@ poetry run aw-watcher-input
 By default, the Input Watcher is not starting automatically on boot, so you need to do a few more steps to make it work: 
 
 ### MacOs
- Make sure the script './start-up/watcher_boot.sh' is executable:
+ Make sure the script `./start-up/watcher_boot.sh` is executable:
 ```bash
 chmod +x ./start-up/watcher_boot.sh
 ```
