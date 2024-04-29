@@ -37,7 +37,7 @@ You can test it by pressing the "Run" button. If everything works, save the appl
 2. Create a shortcut to the `./start-up/startup.cmd`. Right-click in the Start-up folder and select New > Shortcut. Click Browse and navigate to the script or type the path directly. Click Next, give your shortcut a name, and click Finish.
 
 ### Linux
-1. Make sure the script './start-up/watcher_boot.sh' is executable:
+1. Make sure the script `./start-up/watcher_boot.sh` is executable:
 ```bash
 chmod +x ./start-up/watcher_boot.sh
 ```
