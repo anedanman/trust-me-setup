@@ -4,7 +4,7 @@ First download and install the Activity Watch application from the [official pag
 Then install the Activity Watch extension for your browser:
 - Firefox: [AW Watcher Web](https://addons.mozilla.org/en-US/firefox/addon/aw-watcher-web/)
 - Chrome: [ActivityWatch Web Watcher](https://chromewebstore.google.com/detail/activitywatch-web-watcher/nglaklhklhcoonedhgnpgddginnjdadi)
-- Edge: You use Chrome extensions with Edge [(instruction)](https://medium.com/@mariusbongarts/how-to-install-chrome-extensions-in-microsoft-edge-browsers-65914eb61d6)
+- Edge: you can use Chrome extensions with Edge [(instruction)](https://medium.com/@mariusbongarts/how-to-install-chrome-extensions-in-microsoft-edge-browsers-65914eb61d6)
 
 The extension will track the active browser tab and log URLs and titles of the websites you visit.
 # Input monitoring
