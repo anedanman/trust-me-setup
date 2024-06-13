@@ -7,4 +7,4 @@ pip install wheel pillow
 # Install tobii libraries
 pip install python-pygaze
 pip install pygame
-pip install tobii_research
+pip install tobii-research

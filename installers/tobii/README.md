@@ -1,7 +1,7 @@
 # Tobii eyetracker setup
 To set up the Tobii eyetracker, follow these steps:
 
-Run the `install.sh` script to install the necessary dependencies.
+Run the `install.sh` script to install the necessary dependencies. Some of the tobii libraries might be not compatible with the latest python versions, in our case it is working with python 3.8.19.
 
 Edit constants in the `constants.py` file according to your setup.
 
