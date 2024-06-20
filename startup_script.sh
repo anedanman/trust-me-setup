@@ -10,6 +10,8 @@ then
   exec bash
 fi
 
+cd "$HOME/trust-me-setup/"
+
 # Paths
 TOBII_PATH="$HOME/trust-me-setup/installers/tobii/run_tobii.sh";
 RGB_PATH="$HOME/trust-me-setup/installers/data_capture/capture_data.py";
@@ -34,6 +36,9 @@ chmod +x "$TOBII_PATH"
 # Run process in background
 $("$TOBII_PATH") &
 echo "Started recording tobii"
+
+# Configure the cameras
+python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
 
 # Run process in background
 $(python "$RGB_PATH") &
