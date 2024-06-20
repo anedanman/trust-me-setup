@@ -163,3 +163,4 @@ cython_debug/
 installers/data_capture/data/**
 *.h5
 *.mp4
+data/**
