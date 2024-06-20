@@ -185,7 +185,7 @@ if __name__ == "__main__":
     print("Run capture_data.py -h for usage tips.")
     args = parser.parse_args()
 
-    with open("hardware_config.json", "r") as fp:
+    with open("installers/data_capture/hardware_config.json", "r") as fp:
         hw_config = json.load(fp)
 
         capture = CaptureData(seconds=args.duration, filename=args.name)
