@@ -3,13 +3,13 @@
         "resolution_x": 1920,
         "resolution_y":1080,
         "fps": 30.0,
-        "channel": 2
+        "channel": 0
     },
     "hires":  {
         "resolution_x": 3840,
         "resolution_y":2160,
         "fps": 10.0,
-        "channel": 3
+        "channel": 2
     },
     "thermal": {
         "resolution_x": 160,
