@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 import time
+import os
  
 from constants import *
 
@@ -12,6 +13,11 @@ from pygaze.time import Time
 disp = Display()
 disp.close()
 rec_started= '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
+
+# Make sure directory exists
+if not os.path.exists("./recordings"):
+    os.makedirs("./recordings")
+
 tracker = EyeTracker(disp,logfile=f'./recordings/{USERNAME}_{rec_started}')
 
 timer = Time()
