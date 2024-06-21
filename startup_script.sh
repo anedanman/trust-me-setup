@@ -37,7 +37,7 @@ chmod +x "$TOBII_PATH"
 $("$TOBII_PATH") &
 echo "Started recording tobii"
 
-# Configure the cameras
+# Configure the cameras - just noticed device ids are not unique, commenting out until fix
 python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
 
 # Run process in background

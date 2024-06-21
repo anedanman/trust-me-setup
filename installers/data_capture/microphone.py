@@ -32,6 +32,12 @@ class Mic:
             print(f"Error: {status}", flush=True)
         self.recording.append(indata.copy())
 
+    
+    def find_streamcam_mic(self, devs):
+        for dev in devs:
+            if "StreamCam" in dev["name"]:
+                return dev["index"]
+
     def record(self, name, duration, event):
         if duration is None or duration < 0:
             duration = np.inf
@@ -47,7 +53,11 @@ class Mic:
 
         start_time = pytime.time()
 
+        devs = sd.query_devices()
+        dev_id = self.find_streamcam_mic(devs)
+        
         with sd.InputStream(
+            device=dev_id,
             samplerate=self.sampling_rate,
             channels=self.n_channels,
             callback=self.callback,

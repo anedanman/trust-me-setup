@@ -1,28 +1,45 @@
 import subprocess
 import os
 import json
+import glob
 
+#####################################################################
+# This script maps video devices from /dev/video* 
+# to their product names. 
+# Currently we only need to know ID of StreamCam [FHD] and Brio [4K]
+# There can still be some problems for devices with multiple cameras.
+#####################################################################
+
+
+def dev_info(dev):
+    cmd = f"udevadm info --query=all --name={dev}"
+    res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return res.stdout
+
+    
 with open("installers/data_capture/hardware_config.json", "r") as fp:
     config = json.load(fp)
-    print(config)
+    original = config
+    devs = glob.glob("/dev/video*")
     
-    devices = subprocess.check_output(["lsusb"])
-
-    devices = devices.decode("utf-8")
-    devices = devices.split("\n")
-
-    for dev in devices:
-        dev = dev.lower()
-
-        if "stream" in dev:
-            config["rgb"]["channel"] = int(dev.split(" ")[3].replace(":", ""))
-            print(f"Found Streamcam ({config['rgb']['channel']})")
-        elif "brio" in dev:
-            config["hires"]["channel"] = int(dev.split(" ")[3].replace(":", ""))
-            print(f"Found Brio ({config['hires']['channel']})")
+    for dev in devs:
+    
+        info = dev_info(dev).lower()
+        if not "capture" in info:
+            continue
+    
+        if "streamcam" in info:
+            config["rgb"]["channel"] = int(dev[-1])
+            print(f"StreamCam channel: {int(dev[-1])}")
+        elif "brio" in info:
+            config["hires"]["channel"] = int(dev[-1])
+            print(f"Brio channel: {int(dev[-1])}")
+    
     fp.close()
-    
+
+    if config == original:
+        exit()
+        
     with open("installers/data_capture/hardware_config.json", "w") as wfp:
-        print(config)
         json.dump(config, wfp)
         wfp.close()
