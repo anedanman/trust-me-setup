@@ -1,8 +1,0 @@
-pygaze initiation report start
-display resolution: 1920x1080
-display size in cm: 33.8x27.1
-fixation threshold: 1.5 degrees
-speed threshold: 35 degrees/second
-acceleration threshold: 9500 degrees/second**2
-pygaze initiation report end
-TimeStamp	Event	GazePointXLeft	GazePointYLeft	ValidityLeft	GazePointXRight	GazePointYRight	ValidityRight	GazePointX	GazePointY	PupilSizeLeft	PupilValidityLeft	PupilSizeRight	PupilValidityRight
