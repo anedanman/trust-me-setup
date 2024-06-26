@@ -15,3 +15,7 @@ python run_streamdeck.py
 
 ## Saving
 Recordings are saved to `./Recording`
+
+
+temp
+https://soulofcorn.notion.site/Server-cheatsheet-5d5596862a954a21930cc3ea06dfd03b
