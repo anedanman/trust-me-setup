@@ -12,4 +12,4 @@ FILE= FILENAME[:]
 INFO='infos'
 INFOS= INFO[:]
 
-USERNAME='sebas'
+USERNAME='user'

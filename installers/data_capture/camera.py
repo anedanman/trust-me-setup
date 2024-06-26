@@ -59,6 +59,8 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
 
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
+
     def captureImages(self, name="out", seconds=10, show_video=False, start_event=None):
         """
         Records a sequence of images from the camera for the specified number of seconds.

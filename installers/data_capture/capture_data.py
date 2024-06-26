@@ -2,6 +2,7 @@ import argparse
 import json
 import multiprocessing
 import time
+import getpass
 
 # If running capture_data.py (this file)
 from camera import RGBCamera
@@ -28,6 +29,8 @@ from thermal import Thermal
 # which causes an error since objects like VideoCapture() are unpickable.
 # --------------------------------------------------------------------------------------
 
+uname = getpass.getuser()
+
 # Add command line arguments
 parser = argparse.ArgumentParser(
     prog="Data Capture",
@@ -35,7 +38,7 @@ parser = argparse.ArgumentParser(
     epilog="Any bugs in the code are property of JSI",
 )
 
-parser.add_argument("-n", "--name", default="test", type=str)
+parser.add_argument("-n", "--name", default=uname, type=str)
 parser.add_argument("-d", "--duration", default="-1", type=int)
 
 
