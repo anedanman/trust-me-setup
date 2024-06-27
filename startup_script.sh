@@ -3,6 +3,14 @@
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
 echo $(conda --version)
 
+while [ ! -e /dev/video0 ];
+do
+  echo "Waiting for /dev/video0..."
+  sleep 5
+done
+
+echo "Video now available. Starting script..."
+
 if ! conda info > /dev/null 2>&1; 
 then
   echo "Initializing conda"
@@ -37,7 +45,6 @@ chmod +x "$TOBII_PATH"
 $("$TOBII_PATH") &
 echo "Started recording tobii"
 
-# Configure the cameras - just noticed device ids are not unique, commenting out until fix
 python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
 
 # Run process in background
