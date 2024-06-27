@@ -2,6 +2,7 @@ import subprocess
 import os
 import json
 import glob
+from copy import deepcopy
 
 #####################################################################
 # This script maps video devices from /dev/video* 
@@ -19,7 +20,8 @@ def dev_info(dev):
     
 with open("installers/data_capture/hardware_config.json", "r") as fp:
     config = json.load(fp)
-    original = config.copy()
+    original = deepcopy(config)
+    print(original)
     devs = glob.glob("/dev/video*")
     
     for dev in devs:
