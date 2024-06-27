@@ -34,8 +34,10 @@ dependencies:
   - python-sounddevice
   - scipy
   - tifffile
-  - flirpy
+  # - flirpy
   - pip:
+      - streamdeck
+      - flirpy
       - numpy==1.26.0
       - pandas==2.1.1
       - python-dateutil==2.8.2
