@@ -4,7 +4,7 @@
 pid=$$
 pgid=$(ps -o pgid= -p "$pid")
 
-echo $pgid > ~/Desktop/startup_script.pid
+echo $pgid > $HOME/trust-me-setup/tmp/startup_script.pid
 
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
 echo $(conda --version)
