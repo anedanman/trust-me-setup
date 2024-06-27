@@ -166,3 +166,4 @@ installers/data_capture/data/**
 data/**
 *.tsv
 installers/tobii/recordings/**
+installers/data_collection/**

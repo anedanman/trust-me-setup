@@ -69,6 +69,7 @@ class CaptureData:
             ),
             channel=self.hw_config["rgb"]["channel"],
             store_video=True,
+            save_directory="installers/data_collection/data/rgb"
         )
 
         self.hires = RGBCamera(
@@ -189,6 +190,7 @@ class CaptureData:
 
 if __name__ == "__main__":
     print("Run capture_data.py -h for usage tips.")
+
     args = parser.parse_args()
 
     with open("installers/data_capture/hardware_config.json", "r") as fp:
