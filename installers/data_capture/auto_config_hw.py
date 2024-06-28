@@ -21,7 +21,6 @@ def dev_info(dev):
 with open("installers/data_capture/hardware_config.json", "r") as fp:
     config = json.load(fp)
     original = deepcopy(config)
-    print(original)
     devs = glob.glob("/dev/video*")
     
     for dev in devs:
@@ -40,8 +39,6 @@ with open("installers/data_capture/hardware_config.json", "r") as fp:
     fp.close()
 
     if config == original:
-        print(config)
-        print(original)
         exit()
         
     with open("installers/data_capture/hardware_config.json", "w") as wfp:

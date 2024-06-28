@@ -45,4 +45,5 @@ dependencies:
       - six==1.16.0
       - tzdata==2023.3
       - deepface
+      - pyrealsense2
 prefix: /home/gasper/miniconda3/envs/trust-me
