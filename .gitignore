@@ -167,3 +167,5 @@ data/**
 *.tsv
 installers/tobii/recordings/**
 installers/data_collection/**
+tmp/startup_script.pid
+tmp/log.txt

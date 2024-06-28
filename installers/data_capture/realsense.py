@@ -105,7 +105,8 @@ class Realsense(Camera):
                     f"{self.save_directory}/depth/{name}_{img_id}_{timestamp}.h5", "w"
                 ) as hf:
                     hf.create_dataset(
-                        f"{self.save_directory}/depth/{name}_{img_id}_{timestamp}",
+                        #f"{self.save_directory}/depth/{name}_{img_id}_{timestamp}",
+                        "depth",
                         data=depth_image,
                         compression="gzip",
                         compression_opts=9,
