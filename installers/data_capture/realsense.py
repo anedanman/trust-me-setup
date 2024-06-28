@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 
 import cv2
 import h5py
@@ -9,7 +10,7 @@ from camera import Camera
 
 
 def formatted_time():
-    return str(time.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Realsense(Camera):

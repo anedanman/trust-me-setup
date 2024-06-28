@@ -1,12 +1,13 @@
 import os
 import time
+import datetime
 from abc import ABC
 
 import cv2
 
 
 def formatted_time():
-    return str(time.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Camera(ABC):

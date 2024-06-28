@@ -1,5 +1,6 @@
 import os
 import time as pytime
+import datetime
 
 import numpy as np
 import sounddevice as sd
@@ -7,7 +8,7 @@ from scipy.io.wavfile import write
 
 
 def formatted_time():
-    return str(pytime.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Mic:
