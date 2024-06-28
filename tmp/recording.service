@@ -1,0 +1,13 @@
+[Unit]
+Description=Run custom script before shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/dis/trust-me-setup/tmp/kill_cron.sh
+TimeoutSec=0
+RemainAfterExit=true
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target

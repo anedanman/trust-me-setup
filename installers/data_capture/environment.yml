@@ -34,8 +34,10 @@ dependencies:
   - python-sounddevice
   - scipy
   - tifffile
-  - flirpy
+  # - flirpy
   - pip:
+      - streamdeck
+      - flirpy
       - numpy==1.26.0
       - pandas==2.1.1
       - python-dateutil==2.8.2
@@ -43,4 +45,5 @@ dependencies:
       - six==1.16.0
       - tzdata==2023.3
       - deepface
+      - pyrealsense2
 prefix: /home/gasper/miniconda3/envs/trust-me

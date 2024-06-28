@@ -2,6 +2,7 @@ import argparse
 import json
 import multiprocessing
 import time
+import getpass
 
 # If running capture_data.py (this file)
 from camera import RGBCamera
@@ -28,6 +29,8 @@ from thermal import Thermal
 # which causes an error since objects like VideoCapture() are unpickable.
 # --------------------------------------------------------------------------------------
 
+uname = getpass.getuser()
+
 # Add command line arguments
 parser = argparse.ArgumentParser(
     prog="Data Capture",
@@ -35,7 +38,7 @@ parser = argparse.ArgumentParser(
     epilog="Any bugs in the code are property of JSI",
 )
 
-parser.add_argument("-n", "--name", default="test", type=str)
+parser.add_argument("-n", "--name", default=uname, type=str)
 parser.add_argument("-d", "--duration", default="-1", type=int)
 
 
@@ -66,6 +69,7 @@ class CaptureData:
             ),
             channel=self.hw_config["rgb"]["channel"],
             store_video=True,
+            save_directory="installers/data_collection/data/rgb"
         )
 
         self.hires = RGBCamera(
@@ -76,7 +80,7 @@ class CaptureData:
             ),
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
-            save_directory="data/hires",
+            save_directory="installers/data_collection/data/hires",
         )
 
         self.realsense = Realsense(
@@ -85,6 +89,7 @@ class CaptureData:
                 self.hw_config["depth"]["resolution_x"],
                 self.hw_config["depth"]["resolution_y"],
             ),
+            save_directory="installers/data_collection/data/realsense"
         )
 
         self.thermal = Thermal(
@@ -93,12 +98,14 @@ class CaptureData:
                 self.hw_config["thermal"]["resolution_x"],
                 self.hw_config["thermal"]["resolution_y"],
             ),
+            save_directory="installers/data_collection/data/thermal"
         )
 
         self.audio = Mic(
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
             chunk_length=self.hw_config["audio"]["chunk_length"],
+            save_directory="installers/data_collection/data/audio"
         )
 
     def config(self, name, seconds):
@@ -183,9 +190,10 @@ class CaptureData:
 
 if __name__ == "__main__":
     print("Run capture_data.py -h for usage tips.")
+
     args = parser.parse_args()
 
-    with open("hardware_config.json", "r") as fp:
+    with open("installers/data_capture/hardware_config.json", "r") as fp:
         hw_config = json.load(fp)
 
         capture = CaptureData(seconds=args.duration, filename=args.name)

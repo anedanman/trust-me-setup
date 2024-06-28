@@ -1,5 +1,6 @@
 import os
 import time as pytime
+from datetime import datetime
 
 import numpy as np
 import sounddevice as sd
@@ -7,7 +8,7 @@ from scipy.io.wavfile import write
 
 
 def formatted_time():
-    return str(pytime.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Mic:
@@ -32,6 +33,12 @@ class Mic:
             print(f"Error: {status}", flush=True)
         self.recording.append(indata.copy())
 
+    
+    def find_streamcam_mic(self, devs):
+        for dev in devs:
+            if "StreamCam" in dev["name"]:
+                return dev["index"]
+
     def record(self, name, duration, event):
         if duration is None or duration < 0:
             duration = np.inf
@@ -47,7 +54,11 @@ class Mic:
 
         start_time = pytime.time()
 
+        devs = sd.query_devices()
+        dev_id = self.find_streamcam_mic(devs)
+        
         with sd.InputStream(
+            device=dev_id,
             samplerate=self.sampling_rate,
             channels=self.n_channels,
             callback=self.callback,

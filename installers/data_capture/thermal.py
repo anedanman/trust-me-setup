@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 
 import numpy as np
 import tifffile
@@ -8,7 +9,7 @@ from flirpy.camera.lepton import Lepton
 
 
 def formatted_time():
-    return str(time.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Thermal(Camera):

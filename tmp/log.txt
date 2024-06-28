@@ -1,0 +1,25 @@
+čet 27 jun 2024 11:00:54 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Brio channel: 4
+Brio channel: 2
+StreamCam channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@60.530] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@60.530] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 205, in <module>
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 175, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe

@@ -1,12 +1,13 @@
 import os
 import time
+from datetime import datetime
 from abc import ABC
 
 import cv2
 
 
 def formatted_time():
-    return str(time.time()).replace(".", "_")
+    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
 
 
 class Camera(ABC):
@@ -58,6 +59,8 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FPS, self.fps)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
     def captureImages(self, name="out", seconds=10, show_video=False, start_event=None):
         """
