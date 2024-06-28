@@ -6,11 +6,10 @@ import matplotlib.pyplot as plt
 
 def decode_h5(file):
 	with h5py.File(f, "r") as hdf:
-		for key in hdf.keys():
-			data = hdf[key][()]
-			arr = np.array(data)
+		data = hdf["depth"][()]
+		arr = np.array(data)
 
-			return arr
+		return arr
 
 		
 if __name__ == "__main__":
