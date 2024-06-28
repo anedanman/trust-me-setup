@@ -22,11 +22,11 @@ NEED_PRESS = False
 
 # define subprocess
 import subprocess
-level1 = "/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
-level2 = "/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
-level3 = "/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
-level4 = "/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
-level5 = "/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
+level1 = "/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
+level2 = "/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
+level3 = "/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
+level4 = "/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
+level5 = "/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'"
 # labels = {0: 'Very Happy', 1: 'Happy', 2: 'Fine', 3: 'Unhappy', 4: 'Angry'}
 
 
@@ -189,7 +189,7 @@ def key_change_callback(deck, key, state):
     if not state:
         return
 
-    subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> ./streamdeck/Recording/$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+    subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/$(date +\"%Y-%m-%d\")'", shell=True, check=True)
 
     # not last question
     if CURRENT_Q <9:
