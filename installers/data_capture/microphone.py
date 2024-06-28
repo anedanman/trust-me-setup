@@ -1,6 +1,6 @@
 import os
 import time as pytime
-import datetime
+from datetime import datetime
 
 import numpy as np
 import sounddevice as sd
