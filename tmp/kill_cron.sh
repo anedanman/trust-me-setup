@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Improvement idea: Remap the power button to run this script and add "shutdown now" at the end of this file.
+
 pgid_path="/home/dis/trust-me-setup/tmp/startup_script.pid"
 
 echo $(ls /home/dis/trust-me-setup/tmp)
