@@ -30,8 +30,13 @@ with open("installers/data_capture/hardware_config.json", "r") as fp:
             continue
     
         if "streamcam" in info:
-            config["rgb"]["channel"] = int(dev[-1])
-            print(f"StreamCam channel: {int(dev[-1])}")
+            try: 
+                channel = int(dev[-2:])
+            except ValueError:
+                channel = int(dev[-1])
+                print(e)
+            config["rgb"]["channel"] = channel
+            print(f"StreamCam channel: {channel}")
         elif "brio" in info:
             config["hires"]["channel"] = int(dev[-1])
             print(f"Brio channel: {int(dev[-1])}")

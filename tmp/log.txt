@@ -129,3 +129,425 @@ Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-
 BrokenPipeError: [Errno 32] Broken pipe
 Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
 BrokenPipeError: [Errno 32] Broken pipe
+čet 04 jul 2024 07:11:23 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+Brio channel: 4
+Brio channel: 2
+StreamCam channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Traceback (most recent call last):
+  File "run_tobii.py", line 24, in <module>
+    tracker.start_recording()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/pygaze/_eyetracker/libtobii.py", line 198, in start_recording
+    if not self.t0 and self._write_enabled:
+AttributeError: 'TobiiProTracker' object has no attribute 't0'
+/home/dis/trust-me-setup/startup_script.sh: line 52: pygame: command not found
+[ WARN:0@61.014] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@61.014] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@71.310] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video12): select() timeout.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 281, in <module>
+    while deck.is_open():
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeck.py", line 234, in is_open
+    return self.device.is_open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 381, in is_open
+    with self.mutex:
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+pet 05 jul 2024 08:42:40 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+Brio channel: 4
+Brio channel: 2
+StreamCam channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Traceback (most recent call last):
+  File "run_tobii.py", line 24, in <module>
+    tracker.start_recording()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/pygaze/_eyetracker/libtobii.py", line 198, in start_recording
+    if not self.t0 and self._write_enabled:
+AttributeError: 'TobiiProTracker' object has no attribute 't0'
+/home/dis/trust-me-setup/startup_script.sh: line 52: pygame: command not found
+[ WARN:0@60.994] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@60.994] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+pet 05 jul 2024 09:33:26 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+Brio channel: 4
+Brio channel: 2
+StreamCam channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Traceback (most recent call last):
+  File "run_tobii.py", line 24, in <module>
+    tracker.start_recording()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/pygaze/_eyetracker/libtobii.py", line 198, in start_recording
+    if not self.t0 and self._write_enabled:
+AttributeError: 'TobiiProTracker' object has no attribute 't0'
+/home/dis/trust-me-setup/startup_script.sh: line 52: pygame: command not found
+[ WARN:0@61.030] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@61.030] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@71.493] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video12): select() timeout.
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/realsense.py", line 85, in captureImages
+    frames = self.pipeline.wait_for_frames(10000)
+RuntimeError: Frame didn't arrive within 10000
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 282, in <module>
+    deck.set_key_callback(key_change_callback)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+                                                                                                                                                                                                                                                                                                                                                                  pon 08 jul 2024 10:34:35 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 0
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@0.950] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+[ERROR:0@1.069] global obsensor_uvc_stream_channel.cpp:158 getStreamChannelGroup Camera index out of range
+None
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.027] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@61.027] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+pon 08 jul 2024 10:38:55 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 2
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.013] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video11): can't open camera by index
+[ WARN:0@61.013] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@71.919] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video0): select() timeout.
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/realsense.py", line 85, in captureImages
+    frames = self.pipeline.wait_for_frames(10000)
+RuntimeError: Frame didn't arrive within 10000
+pon 08 jul 2024 10:43:09 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 2
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@0.608] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+[ERROR:0@0.608] global obsensor_uvc_stream_channel.cpp:158 getStreamChannelGroup Camera index out of range
+None
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Traceback (most recent call last):
+  File "run_tobii.py", line 24, in <module>
+    tracker.start_recording()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/pygaze/_eyetracker/libtobii.py", line 198, in start_recording
+    if not self.t0 and self._write_enabled:
+AttributeError: 'TobiiProTracker' object has no attribute 't0'
+/home/dis/trust-me-setup/startup_script.sh: line 52: pygame: command not found
+[ WARN:0@60.696] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@60.696] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@60.696] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+[ WARN:0@60.696] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/realsense.py", line 67, in captureImages
+    self.profile = self.pipeline.start(self.config)
+RuntimeError: No device connected
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+pon 08 jul 2024 11:04:30 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 6
+Brio channel: 4
+Brio channel: 2
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.522] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@61.522] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+pon 08 jul 2024 11:07:27 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 6
+Brio channel: 4
+Brio channel: 2
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.487] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@61.487] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@71.681] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video0): select() timeout.
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/realsense.py", line 85, in captureImages
+    frames = self.pipeline.wait_for_frames(10000)
+RuntimeError: Frame didn't arrive within 10000
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+/home/dis/trust-me-setup/installers/data_capture/microphone.py:80: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  recording_np = np.concatenate(np.array(self.recording), axis=0)
+Exception ignored from cffi callback <function _StreamBase.__init__.<locals>.callback_ptr at 0x7ff4325b6d30>:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/sounddevice.py", line 846, in callback_ptr
+    return _wrap_callback(callback, data, frames, time, status)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/sounddevice.py", line 2687, in _wrap_callback
+    callback(*args)
+  File "/home/dis/trust-me-setup/installers/data_capture/microphone.py", line 33, in callback
+    print(f"Error: {status}", flush=True)
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+tor 09 jul 2024 09:54:00 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 6
+Brio channel: 4
+Brio channel: 2
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.482] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@61.482] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      tor 09 jul 2024 10:06:31 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 6
+Brio channel: 4
+Brio channel: 2
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.504] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@61.504] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 281, in <module>
+    while deck.is_open():
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+čet 11 jul 2024 07:08:41 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 0
+Brio channel: 8
+Brio channel: 6
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@1.005] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+[ERROR:0@1.129] global obsensor_uvc_stream_channel.cpp:158 getStreamChannelGroup Camera index out of range
+None
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.080] global cap_v4l.cpp:889 requestBuffers VIDEOIO(V4L2:/dev/video6): failed VIDIOC_REQBUFS: errno=19 (No such device)
+[ WARN:0@61.082] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video13): can't open camera by index
+[ WARN:0@61.082] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 200, in <module>
+    capture.capture()
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 176, in capture
+    process.join()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+čet 11 jul 2024 07:12:04 CEST
+conda 24.4.0
+Video now available. Starting script...
+Started recording tobii
+Streamdeck running
+StreamCam channel: 0
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@0.941] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+[ERROR:0@1.060] global obsensor_uvc_stream_channel.cpp:158 getStreamChannelGroup Camera index out of range
+None
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Process Process-4:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/realsense.py", line 60, in captureImages
+    start_event.wait()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 349, in wait
+    self._cond.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 261, in wait
+    return self._wait_semaphore.acquire(True, timeout)
+KeyboardInterrupt
+Process Process-1:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/camera.py", line 75, in captureImages
+    start_event.wait()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 349, in wait
+    self._cond.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 261, in wait
+    return self._wait_semaphore.acquire(True, timeout)
+KeyboardInterrupt
+Process Process-5:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/thermal.py", line 59, in captureImages
+    start_event.wait()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 349, in wait
+    self._cond.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 261, in wait
+    return self._wait_semaphore.acquire(True, timeout)
+KeyboardInterrupt
+Process Process-3:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/microphone.py", line 49, in record
+    event.wait()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 349, in wait
+    self._cond.wait(timeout)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/synchronize.py", line 261, in wait
+    return self._wait_semaphore.acquire(True, timeout)
+KeyboardInterrupt
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
