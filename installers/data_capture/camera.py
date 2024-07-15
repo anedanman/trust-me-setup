@@ -7,7 +7,7 @@ import cv2
 
 
 def formatted_time():
-    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
+    return "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
 
 class Camera(ABC):

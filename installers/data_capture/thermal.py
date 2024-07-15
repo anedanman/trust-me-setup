@@ -9,7 +9,7 @@ from flirpy.camera.lepton import Lepton
 
 
 def formatted_time():
-    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
+    return "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
 
 class Thermal(Camera):

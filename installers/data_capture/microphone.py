@@ -8,7 +8,7 @@ from scipy.io.wavfile import write
 
 
 def formatted_time():
-    return '{:%Y-%m-%d$%H-%M-%S-%f}'.format(datetime.now())
+    return "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
 
 class Mic:
@@ -33,7 +33,6 @@ class Mic:
             print(f"Error: {status}", flush=True)
         self.recording.append(indata.copy())
 
-    
     def find_streamcam_mic(self, devs):
         for dev in devs:
             if "StreamCam" in dev["name"]:
@@ -56,7 +55,7 @@ class Mic:
 
         devs = sd.query_devices()
         dev_id = self.find_streamcam_mic(devs)
-        
+
         with sd.InputStream(
             device=dev_id,
             samplerate=self.sampling_rate,
