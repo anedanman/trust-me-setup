@@ -15,8 +15,16 @@ def formatted_time():
 class Thermal(Camera):
     """Class for thermal camera data capture support"""
 
-    def __init__(self, fps=8, resolution=(160, 120), save_directory="data/thermal"):
-        super(Thermal, self).__init__(fps, resolution, save_directory)
+    def __init__(
+        self,
+        fps=8,
+        resolution=(160, 120),
+        save_directory="data/thermal",
+        chunk_size=1200,
+    ):
+        super(Thermal, self).__init__(
+            fps, resolution, save_directory, chunk_size=chunk_size
+        )
 
         print(
             f"Thermal camera set with FPS: {self.fps} and resolution: {self.resolution}!"
@@ -48,10 +56,10 @@ class Thermal(Camera):
         seconds=10,
         to_celsius=True,
         start_event=None,
-        disk_saving_interval=1200,
+        # self.chunk_size=1200,
     ):
         """to_celsius: Whether to convert the image to celsius or keep values in Kelvin * 100
-        disk_saving_interval: interval for saving video in seconds"""
+        self.chunk_size: interval for saving video in seconds"""
 
         self.initCamera()
 
@@ -85,10 +93,7 @@ class Thermal(Camera):
                 video.append(frame)
 
                 # Write to disk
-                if (
-                    len(video) > 0
-                    and time.time() - current_time >= disk_saving_interval
-                ):
+                if len(video) > 0 and time.time() - current_time >= self.chunk_size:
                     self.saveToDisk(name, video)
 
                     # Empty video array

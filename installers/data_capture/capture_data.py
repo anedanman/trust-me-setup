@@ -101,6 +101,7 @@ class CaptureData:
                 self.hw_config["thermal"]["resolution_y"],
             ),
             save_directory="installers/data_collection/data/thermal",
+            chunk_size=self.hw_config["thermal"]["chunk_length"],
         )
 
         self.audio = Mic(
