@@ -69,7 +69,8 @@ class CaptureData:
             ),
             channel=self.hw_config["rgb"]["channel"],
             store_video=True,
-            save_directory="installers/data_collection/data/rgb"
+            save_directory="installers/data_collection/data/rgb",
+            chunk_size=self.hw_config["rgb"]["chunk_length"],
         )
 
         self.hires = RGBCamera(
@@ -81,6 +82,7 @@ class CaptureData:
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
             save_directory="installers/data_collection/data/hires",
+            chunk_size=self.hw_config["hires"]["chunk_length"],
         )
 
         self.realsense = Realsense(
@@ -89,7 +91,7 @@ class CaptureData:
                 self.hw_config["depth"]["resolution_x"],
                 self.hw_config["depth"]["resolution_y"],
             ),
-            save_directory="installers/data_collection/data/realsense"
+            save_directory="installers/data_collection/data/realsense",
         )
 
         self.thermal = Thermal(
@@ -98,14 +100,15 @@ class CaptureData:
                 self.hw_config["thermal"]["resolution_x"],
                 self.hw_config["thermal"]["resolution_y"],
             ),
-            save_directory="installers/data_collection/data/thermal"
+            save_directory="installers/data_collection/data/thermal",
+            chunk_size=self.hw_config["thermal"]["chunk_length"],
         )
 
         self.audio = Mic(
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
             chunk_length=self.hw_config["audio"]["chunk_length"],
-            save_directory="installers/data_collection/data/audio"
+            save_directory="installers/data_collection/data/audio",
         )
 
     def config(self, name, seconds):

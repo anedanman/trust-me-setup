@@ -1,15 +1,15 @@
 # constants for PyGaze_trackertest.py
 
-DISPTYPE = 'pygame'
+DISPTYPE = "pygame"
 DISPSIZE = 1920, 1080
 
 DUMMYMODE = False
-TRACKERTYPE = 'tobii'
+TRACKERTYPE = "tobii"
 
-FILENAME='results'
-FILE= FILENAME[:]
+FILENAME = "results"
+FILE = FILENAME[:]
 
-INFO='infos'
-INFOS= INFO[:]
+INFO = "infos"
+INFOS = INFO[:]
 
-USERNAME='user'
+USERNAME = "user"
