@@ -11,10 +11,11 @@ def formatted_time():
 
 
 class Camera(ABC):
-    def __init__(self, fps, resolution, save_directory="data/rgb"):
+    def __init__(self, fps, resolution, save_directory="data/rgb", chunk_size=3600):
         self.fps = fps
         self.resolution = resolution
         self.save_directory = save_directory
+        self.chunk_size = chunk_size
 
     def initCamera(self):
         """Initialize camera object"""
@@ -36,8 +37,9 @@ class RGBCamera(Camera):
         save_directory="data/rgb",
         channel=0,
         store_video=True,
+        chunk_size=3600,
     ):
-        super(RGBCamera, self).__init__(fps, resolution, save_directory)
+        super(RGBCamera, self).__init__(fps, resolution, save_directory, chunk_size)
 
         self.channel = channel
         self.store_video = store_video
@@ -54,6 +56,8 @@ class RGBCamera(Camera):
 
         self.cap = cap
 
+        self.fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+
     def configureCamera(self):
         """Configures camera resolution"""
         self.cap.set(cv2.CAP_PROP_FPS, self.fps)
@@ -63,11 +67,6 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
     def captureImages(self, name="out", seconds=10, show_video=False, start_event=None):
-        """
-        Records a sequence of images from the camera for the specified number of seconds.
-        If you want to record indefinitely, set seconds to -1.
-        """
-
         self.initCamera(camera_id=self.channel)
         self.configureCamera()
 
@@ -77,57 +76,61 @@ class RGBCamera(Camera):
         if seconds is None or seconds < 0:
             seconds = float("inf")
 
-        # Set directory where the frames are saved and make sure it exists
         if not os.path.exists(self.save_directory):
             os.makedirs(self.save_directory)
 
+        start_time = time.time()
+        chunk_index = 0
+        img_id = 0
         if self.store_video:
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             out = cv2.VideoWriter(
-                f"{self.save_directory}/{name}_{formatted_time()}.mp4",
-                fourcc,
+                f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
+                self.fourcc,
                 self.fps,
                 self.resolution,
             )
-
-        # Record for specified number of seconds
         try:
-            img_id = 0
-            start_time = time.time()
             while time.time() - start_time < seconds:
-                # Read frame
-                ret, frame = self.cap.read()
-                if not ret:
-                    print("Can't receive frame (stream end?). Exiting ...")
-                    break
-
-                if self.store_video and time.time():
-                    out.write(frame)
-                else:
-                    # write the frame
-                    cv2.imwrite(
-                        f"{self.save_directory}/{name}_{img_id}_{formatted_time()}.jpg",
-                        frame,
+                chunk_start_time = time.time()
+                if self.store_video or out == None:
+                    out = cv2.VideoWriter(
+                        f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
+                        self.fourcc,
+                        self.fps,
+                        self.resolution,
                     )
-                    img_id += 1
+                    chunk_index += 1
 
-                # Show the frame
-                if show_video:
-                    cv2.imshow("rec", frame)
-
-                    if cv2.waitKey(1) == ord("q"):
+                while time.time() - chunk_start_time < self.chunk_size:
+                    ret, frame = self.cap.read()
+                    if not ret:
+                        print("Can't receive frame (stream end?). Exiting ...")
                         break
+
+                    if self.store_video:
+                        out.write(frame)
+                    else:
+                        cv2.imwrite(
+                            f"{self.save_directory}/{name}_{img_id}_{formatted_time()}.jpg",
+                            frame,
+                        )
+                        img_id += 1
+
+                    if show_video:
+                        cv2.imshow("rec", frame)
+                        if cv2.waitKey(1) == ord("q"):
+                            break
+
+                if self.store_video:
+                    out.release()
 
         except KeyboardInterrupt:
             print("KeyboardInterrupt [camera.py]")
 
         finally:
-            # Release everything if job is finished
             self.cap.release()
-
             if self.store_video:
                 out.release()
-
             print("Stored RGB.")
 
             if show_video:
@@ -136,6 +139,8 @@ class RGBCamera(Camera):
 
 if __name__ == "__main__":
     start = time.time()
-    camera = RGBCamera(channel=3, fps=30.0, store_video=True, resolution=(1920, 1080))
+    camera = RGBCamera(
+        channel=0, fps=30.0, store_video=True, resolution=(1920, 1080), chunk_size=30
+    )
 
-    camera.captureImages(show_video=True)
+    camera.captureImages(seconds=-1, show_video=False)

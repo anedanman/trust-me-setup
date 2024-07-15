@@ -70,6 +70,7 @@ class CaptureData:
             channel=self.hw_config["rgb"]["channel"],
             store_video=True,
             save_directory="installers/data_collection/data/rgb",
+            chunk_size=self.hw_config["rgb"]["chunk_length"],
         )
 
         self.hires = RGBCamera(
@@ -81,6 +82,7 @@ class CaptureData:
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
             save_directory="installers/data_collection/data/hires",
+            chunk_size=self.hw_config["hires"]["chunk_length"],
         )
 
         self.realsense = Realsense(
