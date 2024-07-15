@@ -42,5 +42,5 @@ Unless you are changing your workspace screen size, or adjusting your seating wi
 - The thresholds for valid data collection: limitation of noise.
 
 ### Cleaning large files from git history
-[Repo cleaner](https://rtyley.github.io/bfg-repo-cleaner/)
+[Repo cleaner](https://rtyley.github.io/bfg-repo-cleaner/) \
 [git-repo-filter](https://github.com/newren/git-filter-repo/blob/main/Documentation/converting-from-filter-branch.md#cheat-sheet-conversion-of-examples-from-the-filter-branch-manpage)
