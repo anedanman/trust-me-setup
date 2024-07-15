@@ -15,6 +15,7 @@ import threading
 import time
 import random
 
+
 VERBOSE = False # Debug
 DURATION = 10800 # set glocal sleep time in seconds (3 HRS)
 CURRENT_Q = 1 # current question
@@ -31,12 +32,14 @@ level5 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/
 # labels = {0: 'Very Happy', 1: 'Happy', 2: 'Fine', 3: 'Unhappy', 4: 'Angry'}
 
 
+
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 
 # Folder location of image assets used by this example.
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
+
 
 def alarm(deck):
     global NEED_PRESS
@@ -59,9 +62,11 @@ def alarm(deck):
 
     return
 
+
 def timer_function(deck):
     global NEED_PRESS
     while deck.is_open():
+
         # create a new sleep time:
         time_sleep = random.randint(0,DURATION)
         time_sleep_left = DURATION - time_sleep
@@ -73,7 +78,6 @@ def timer_function(deck):
         NEED_PRESS = True
         alarm(deck)  # Function to call every 10 seconds
         time.sleep(time_sleep_left)
-
 
 
 # Generates a custom tile with run-time generated text and custom image via the
@@ -89,12 +93,19 @@ def render_key_image(deck, icon_filename, font_filename, label_text):
     # label onto the image a few pixels from the bottom of the key.
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font_filename, 14)
-    draw.text((image.width / 2, image.height - 5), text=label_text, font=font, anchor="ms", fill="white")
+    draw.text(
+        (image.width / 2, image.height - 5),
+        text=label_text,
+        font=font,
+        anchor="ms",
+        fill="white",
+    )
 
     return PILHelper.to_native_key_format(deck, image)
 
 
 # Returns styling information for a key based on its position and state.
+
 def get_key_style(deck, key, state): # device, int, False
     global NEED_PRESS   
     global CURRENT_Q
@@ -144,18 +155,20 @@ def get_key_style(deck, key, state): # device, int, False
         "name": name,
         "icon": os.path.join(ASSETS_PATH, icon),
         "font": os.path.join(ASSETS_PATH, font),
-        "label": label
+        "label": label,
     }
 
 
 # Creates a new key image based on the key index, style and current key state
 # and updates the image on the StreamDeck.
-def update_key_image(deck, key, state): # device, int, False
+def update_key_image(deck, key, state):  # device, int, False
     # Determine what icon and label to use on the generated key.
     key_style = get_key_style(deck, key, state)
 
     # Generate the custom key with the requested image and label.
-    image = render_key_image(deck, key_style["icon"], key_style["font"], key_style["label"])
+    image = render_key_image(
+        deck, key_style["icon"], key_style["font"], key_style["label"]
+    )
 
     # Use a scoped-with on the deck to ensure we're the only thread using it
     # right now.
@@ -269,18 +282,18 @@ if __name__ == "__main__":
         deck.set_brightness(90)
 
         timer_thread = threading.Thread(target=timer_function, args=(deck,))
-        timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
+        timer_thread.daemon = (
+            True  # This makes the timer_thread terminate when the main program exits
+        )
         timer_thread.start()
 
         # Set initial key images.
         for key in range(deck.key_count()):
             update_key_image(deck, key, False)
 
-
         # Register callback function for when a key state changes.
         while deck.is_open():
             deck.set_key_callback(key_change_callback)
-
 
         # Wait until all application threads have terminated (for this example,
         # this is when all deck handles are closed).

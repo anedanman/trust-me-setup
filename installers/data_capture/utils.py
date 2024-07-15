@@ -5,24 +5,23 @@ import matplotlib.pyplot as plt
 
 
 def decode_h5(file):
-	with h5py.File(f, "r") as hdf:
-		data = hdf["depth"][()]
-		arr = np.array(data)
+    with h5py.File(f, "r") as hdf:
+        data = hdf["depth"][()]
+        arr = np.array(data)
 
-		return arr
+        return arr
 
-		
+
 if __name__ == "__main__":
-	for f in os.listdir("."):
+    for f in os.listdir("."):
 
-		if ".py" in f or ".npy" in f:
-			continue
-		
-		arr = decode_h5(f)			
-		
-		np.save(f.replace(".h5", ".npy"), arr)
+        if ".py" in f or ".npy" in f:
+            continue
 
-		plt.imshow(arr)
+        arr = decode_h5(f)
 
-		plt.show()
+        np.save(f.replace(".h5", ".npy"), arr)
 
+        plt.imshow(arr)
+
+        plt.show()
