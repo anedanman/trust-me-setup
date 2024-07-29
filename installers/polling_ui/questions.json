@@ -1,0 +1,96 @@
+{
+  "emotions": [
+    {
+      "text": "Rate the level of valence you are feeling at this moment.",
+      "scale_size": 5,
+      "text_slider_min": "Very low",
+      "text_slider_max": "Very high"
+    },
+    {
+      "text": "Rate the level of arousal you are feeling at this moment.",
+      "scale_size": 5,
+      "text_slider_min": "Very low",
+      "text_slider_max": "Very high"
+    }
+  ],
+  "engagement": [
+    {
+      "text": "Right now I feel bursting with energy.",
+      "scale_size": 7,
+      "text_slider_min": "Not true at all", 
+      "text_slider_max": "Very true"
+    },
+    {
+      "text": "Right now I feel enthusiastic about my job.",
+      "scale_size": 7,
+      "text_slider_min": "Not true at all", 
+      "text_slider_max": "Very true"
+    },
+    {
+      "text": "Right now I am immersed in my work.",
+      "scale_size": 7,
+      "text_slider_min": "Not true at all", 
+      "text_slider_max": "Very true"
+    }
+  ],
+  "low_fatigue": [
+    {
+      "text": "How one feels at the moment is ofted described in terms of the state of charge of a battery, ranging from depleted to full of energy. Please indicate which of the following best describes your current state.",
+      "scale_size": 7,
+      "text_slider_min": "Very depleted",
+      "text_slider_max": "Full of energy"
+    }
+  ],
+  "physical_comfort": [
+    {
+      "text": "Do you feel any physical discomfort? If yes, where?",
+      "scale_size": 5,
+      "text_slider_min": "No pain at all",
+      "text_slider_max": "I am in severe pain"
+    }
+  ],
+  "sufficient_sleep": [
+     {
+       "text": "How many hours did you sleep last night",
+       "scale_size": 8,
+       "text_slider_min": "1 or less",
+       "text_slider_max": "8 or more"
+     },
+     {
+       "text": "How would you rate the quality of your previous night's sleep?",
+       "scale_size": 4,
+       "text_slider_min": "Very bad",
+       "text_slider_max": "Very good"
+     },
+     {
+       "text": "This morning, how much of a problem has it been for you to keep up enough enthusiasim to get things done?",
+       "scale_size": 4,
+       "text_slider_min": "No problem at all",
+       "text_slider_max": "Very problematic"
+     }
+  ],
+  "workplace_interactions": [
+    {
+      "text": "Since the last singal occured, was there any interpersonal conflict among the people you work with?",
+      "scale_size": 5,
+      "text_slider_min": "Not at all",
+      "text_slider_max": "To a very great extent"
+    }
+  ],
+  "stress": [
+    {
+      "text": "Do you find your job stressful right now?",
+      "scale_size": 5,
+      "text_slider_min": "Not at all",
+      "text_slider_max": "To a very great extent"
+    }
+  ],
+  "productivity": [
+    {
+      "text": "Rate your job performance in this moment.",
+      "scale_size": 4,
+      "text_slider_min": "Improvement needed",
+      "text_slider_max": "Significantly exceeds all objectives"
+    }
+  ]
+}
