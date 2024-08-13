@@ -38,7 +38,7 @@ You can test it by pressing the "Run" button. If everything works, save the appl
 2. Create a shortcut to the `./start-up/startup.cmd`. Right-click in the Start-up folder and select New > Shortcut. Click Browse and navigate to the script or type the path directly. Click Next, give your shortcut a name, and click Finish.
 
 ### Linux
-Add the `aw-tq` and `aw-watcher-input` executables from the downloaded archive to the "Startup Applications" and enter the paths for the commands. For the `aw-watcher-input`, add `sleep 30 &&` before the path so it launches after the main application's executable. To extract the data, go to `http://localhost:5600`.
+Add the `aw-tq` and `aw-watcher-input` executables from the downloaded archive to the "Startup Applications" and enter the paths for the commands. For the `aw-watcher-input`, add `bash -c "sleep 30 && <your path>"` so it launches after the main application's executable. To extract the data, go to `http://localhost:5600`.
 
 ## Check if it works
 If everything is set up correctly, you should see the data in the ActivityWatch dashboard, which is accessible at `http://localhost:5600` and the exported data is located in the `.aw-watcher-input/start-up/data` folder in the raw format as `export.json`.
