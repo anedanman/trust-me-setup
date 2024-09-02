@@ -1,0 +1,1 @@
+[('Right now I feel bursting with energy.', 1), ('Right now I feel enthusiastic about my job.', 1), ('Right now I am immersed in my work.', 1)]

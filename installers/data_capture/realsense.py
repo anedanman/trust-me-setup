@@ -74,15 +74,19 @@ class Realsense(Camera):
         start_time = time.time()
 
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        current_ft = formatted_time()
+
         out = cv2.VideoWriter(
-            f"{self.save_directory}/rgb/{name}_{formatted_time()}.mp4",
+            f"{self.save_directory}/rgb/{name}_{current_ft}.mp4",
             fourcc,
             self.fps,
             self.resolution,
         )
 
         try:
-            img_id = 0
+            chunk_frames = []
+            chunk_timestamps = []
+
             while time.time() - start_time < seconds:
                 frames = self.pipeline.wait_for_frames(10000)
 
@@ -98,23 +102,44 @@ class Realsense(Camera):
                 depth_image = (
                     np.asanyarray(depth_frame.get_data(), dtype=np.float32) / 65535.0
                 )
+                depth_image = np.array(depth_image, dtype=np.float16)
                 color_image = np.asanyarray(color_frame.get_data())
 
                 timestamp = formatted_time()
 
-                # Store depth
-                with h5py.File(
-                    f"{self.save_directory}/depth/{name}_{img_id}_{timestamp}.h5", "w"
-                ) as hf:
-                    hf.create_dataset(
-                        # f"{self.save_directory}/depth/{name}_{img_id}_{timestamp}",
-                        "depth",
-                        data=depth_image,
-                        compression="gzip",
-                        compression_opts=9,
-                    )
+                chunk_frames.append(depth_image)
+                chunk_timestamps.append(timestamp)
 
                 out.write(color_image)
+
+                if len(chunk_frames) >= int(self.fps) * 60 * 30:
+                    # Store depth frames and timestamps in a chunk
+                    with h5py.File(
+                        f"{self.save_directory}/depth/{name}_{current_ft}.h5", "w"
+                    ) as hf:
+                        hf.create_dataset(
+                            "depth", 
+                            data=np.array(chunk_frames), 
+                            compression="gzip",
+                            compression_opts=9
+                        )
+                        # hf.create_dataset("timestamps", data=np.array(chunk_timestamps))
+                    chunk_frames = []
+                    chunk_timestamps = []
+                    current_ft = formatted_time()
+
+            # Store remaining depth frames and timestamps
+            if chunk_frames:
+                with h5py.File(
+                    f"{self.save_directory}/depth/{name}_{current_ft}.h5", "w"
+                ) as hf:
+                    hf.create_dataset(
+                        "depth", 
+                        data=np.array(chunk_frames), 
+                        compression="gzip",
+                        compression_opts=9
+                    )
+                    # hf.create_dataset("timestamps", data=np.array(chunk_timestamps, dtype='S'))
 
         except KeyboardInterrupt:
             pass
@@ -128,4 +153,4 @@ if __name__ == "__main__":
     cam = Realsense()
     cam.initCamera()
     cam.configureCamera()
-    cam.captureImages(seconds=10)
+    cam.captureImages(seconds=15)
