@@ -7,6 +7,7 @@ import h5py
 import numpy as np
 import pyrealsense2 as rs
 from camera import Camera
+from utils import save_pid
 
 
 def formatted_time():
@@ -53,6 +54,7 @@ class Realsense(Camera):
         )
 
     def captureImages(self, name="out", seconds=10, start_event=None):
+        save_pid("depth")
         self.initCamera()
         self.configureCamera()
 

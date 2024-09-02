@@ -3,6 +3,10 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
+def save_pid(name):
+    pid = os.getpid()
+    with open(f"tmp/pids/{name}", "w") as f:
+        f.write(str(pid))
 
 def decode_h5(file):
     with h5py.File(f, "r") as hdf:

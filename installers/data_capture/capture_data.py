@@ -3,6 +3,9 @@ import json
 import multiprocessing
 import time
 import getpass
+import os
+from utils import save_pid 
+import subprocess
 
 # If running capture_data.py (this file)
 from camera import RGBCamera
@@ -125,12 +128,14 @@ class CaptureData:
         #  RGB
         self.rgb_process = multiprocessing.Process(
             target=self.rgb.captureImages,
-            args=(name, seconds, self.show_rgb, self.start_event),
+            args=(name, seconds, self.show_rgb, self.start_event,),
+            kwargs=({"process_type": "streamcam"})
         )
 
         self.hires_process = multiprocessing.Process(
             target=self.hires.captureImages,
-            args=(name, seconds, self.show_rgb, self.start_event),
+            args=(name, seconds, self.show_rgb, self.start_event,),
+            kwargs=({"process_type": "brio"})
         )
 
         self.audio_process = multiprocessing.Process(
@@ -171,30 +176,33 @@ class CaptureData:
                 print(
                     "Keyboard Interrupt detected, stopping recording...[capture_data.py]"
                 )
+
+                subprocess.call("kill_processes.sh", shell=True)
             else:
                 print("An error occured:", e)
 
-        finally:
-            for process in process_list:
-                process.join()
-                if process.exitcode == 0:
-                    print(f"Process {process.name} exited successfully.")
-                else:
-                    if process.exitcode != None:
-                        print(
-                            f"Process {process.name} exited with exit code {process.exitcode}"
-                        )
+        # finally:
+            # for process in process_list:
+                # process.join()
+                # if process.exitcode == 0:
+                    # print(f"Process {process.name} exited successfully.")
+                # else:
+                    # if process.exitcode != None:
+                        # print(
+                            # f"Process {process.name} exited with exit code {process.exitcode}"
+                        # )
 
-            time.sleep(3)
+            # time.sleep(3)
 
-            print("All processes finished. Recording stopped and saved")
+            # print("All processes finished. Recording stopped and saved")
             exit()
-
 
 if __name__ == "__main__":
     print("Run capture_data.py -h for usage tips.")
 
     args = parser.parse_args()
+
+    save_pid("capture_data.pid")
 
     with open("installers/data_capture/hardware_config.json", "r") as fp:
         hw_config = json.load(fp)

@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+from utils import save_pid
 
 import numpy as np
 import tifffile
@@ -61,6 +62,7 @@ class Thermal(Camera):
         """to_celsius: Whether to convert the image to celsius or keep values in Kelvin * 100
         self.chunk_size: interval for saving video in seconds"""
 
+        save_pid("thermal")
         self.initCamera()
 
         if start_event:
@@ -104,10 +106,10 @@ class Thermal(Camera):
             if isinstance(e, KeyboardInterrupt):
                 print("Keyboard Interrupt [thermal.py]")
             else:
-                print(e)
+                print("Thermal camera error!", e)
 
         finally:
-            self.saveToDisk(name, video)
+            self.saveToDisk(name, video)   # Might cause empty saves but necessary
             print("Done...[thermal.py]")
 
 

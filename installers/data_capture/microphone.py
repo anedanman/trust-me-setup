@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import sounddevice as sd
 from scipy.io.wavfile import write
+from utils import save_pid
 
 
 def formatted_time():
@@ -14,7 +15,7 @@ def formatted_time():
 class Mic:
     def __init__(
         self,
-        sampling_rate=44100,
+        sampling_rate=16000,
         n_channels=1,
         save_directory="data/audio",
         chunk_length=60 * 60 * 2,
@@ -39,6 +40,9 @@ class Mic:
                 return dev["index"]
 
     def record(self, name, duration, event):
+
+        save_pid("audio")
+        
         if duration is None or duration < 0:
             duration = np.inf
 
@@ -86,3 +90,8 @@ class Mic:
             print(f"Recording saved to {filename}")
         else:
             print("No recording to save.")
+
+
+if __name__ == "__main__":
+    mic = Mic()    
+    mic.record(name="test", duration=10, event=None)
