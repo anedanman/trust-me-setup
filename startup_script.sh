@@ -48,6 +48,12 @@ fi
 
 chmod +x "$TOBII_PATH"
 
+python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
+
+# Run process in background
+$(python "$RGB_PATH") &
+echo "Started recording RGB"
+
 # Run process in background
 $("$TOBII_PATH") &
 echo "Started recording tobii"
@@ -56,11 +62,7 @@ echo "Started recording tobii"
 $(python "$STREAMDECK_PATH") &
 echo "Streamdeck running"
 
-python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
 
-# Run process in background
-$(python "$RGB_PATH") &
-echo "Started recording RGB"
 
 
 wait

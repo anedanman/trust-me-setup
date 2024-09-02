@@ -5,7 +5,7 @@ Before=shutdown.target reboot.target halt.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/dis/trust-me-setup/tmp/kill_cron.sh
+ExecStart=/home/dis/trust-me-setup/tmp/kill_processes.sh
 TimeoutSec=0
 RemainAfterExit=true
 

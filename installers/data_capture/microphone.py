@@ -80,7 +80,7 @@ class Mic:
 
     def save_recording(self):
         if self.recording:
-            recording_np = np.concatenate(np.array(self.recording), axis=0)
+            recording_np = np.concatenate(np.array(self.recording, dtype=object), axis=0)
             filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
 
             if not os.path.exists(self.save_directory):

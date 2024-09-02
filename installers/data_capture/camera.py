@@ -118,10 +118,10 @@ class RGBCamera(Camera):
                         )
                         img_id += 1
 
-                    if show_video:
-                        cv2.imshow("rec", frame)
-                        if cv2.waitKey(1) == ord("q"):
-                            break
+                    # if show_video:
+                        # cv2.imshow("rec", frame)
+                        # if cv2.waitKey(1) == ord("q"):
+                            # break
 
                 if self.store_video:
                     out.release()

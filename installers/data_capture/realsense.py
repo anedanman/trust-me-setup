@@ -109,9 +109,7 @@ class Realsense(Camera):
 
                 chunk_frames.append(depth_image)
                 chunk_timestamps.append(timestamp)
-
                 out.write(color_image)
-
                 if len(chunk_frames) >= int(self.fps) * 60 * 30:
                     # Store depth frames and timestamps in a chunk
                     with h5py.File(
@@ -123,7 +121,7 @@ class Realsense(Camera):
                             compression="gzip",
                             compression_opts=9
                         )
-                        # hf.create_dataset("timestamps", data=np.array(chunk_timestamps))
+                        hf.create_dataset("timestamps", data=np.array(chunk_timestamps))
                     chunk_frames = []
                     chunk_timestamps = []
                     current_ft = formatted_time()

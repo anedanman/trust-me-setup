@@ -1,16 +1,19 @@
-
 #!/bin/bash
+echo "Killing PIDS"
 
-filenames=("audio" "brio" "depth" "streamcam" "thermal" "capture_data.pid")
+filenames=("pids/audio" "pids/brio" "pids/depth" "pids/streamcam" "pids/thermal" "pids/capture_data.pid")
 
 for filename in "${filenames[@]}"; do
-  if [[ -f "$filename"]]; then
-
+  if [[ -f "$filename" ]]; then  # Fixed: added a space before ]]
     pid=$(head -n 1 "$filename")
 
     # Send interrupt signal
     if [[ $pid =~ ^[0-9]+$ ]]; then
       kill -2 "$pid"
+    else
+      echo "Invalid PID: $pid in $filename"
     fi
+  else
+    echo "File not found: $filename"
   fi
 done
