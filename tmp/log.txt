@@ -360,3 +360,23 @@ Started recording tobii
 Streamdeck running
 ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
 ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@61.024] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@61.024] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@72.053] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video0): select() timeout.
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Process Process-1:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/microphone.py", line 79, in record
+    self.save_recording()
+  File "/home/dis/trust-me-setup/installers/data_capture/microphone.py", line 83, in save_recording
+    recording_np = np.concatenate(np.array(self.recording, dtype=object), axis=0)
+RuntimeError: Inconsistent object during array creation? Content of sequences changed (length inconsistent).
+/home/dis/trust-me-setup/startup_script.sh: line 54: Run: command not found

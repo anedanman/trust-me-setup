@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Killing PIDS"
 
-filenames=("pids/audio" "pids/brio" "pids/depth" "pids/streamcam" "pids/thermal" "pids/capture_data.pid")
+filenames=("pids/audio" "pids/brio" "pids/depth" "pids/streamcam" "pids/thermal" "pids/tobii" "pids/capture_data.pid")
 
 for filename in "${filenames[@]}"; do
   if [[ -f "$filename" ]]; then  # Fixed: added a space before ]]
