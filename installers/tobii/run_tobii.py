@@ -9,21 +9,16 @@ from pygaze.display import Display
 from pygaze.eyetracker import EyeTracker
 from pygaze.time import Time
 
-def save_pid():
-    pid = os.getpid()
-    with open(f"~/trust-me-setup/tmp/pids/{name}", "tobii") as f:
-        f.write(str(pid))
 
 disp = Display()
 disp.close()
 rec_started = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
-SAVE_PATH = "~/trust-me-setup/installers/data_collection/tobii/recordings"
 # Make sure directory exists
-if not os.path.exists(SAVE_PATH):
-    os.makedirs(SAVE_PATH)
+if not os.path.exists("./recordings"):
+    os.makedirs("./recordings")
 
-tracker = EyeTracker(disp, logfile=f"{SAVE_PATH}/{USERNAME}_{rec_started}")
+tracker = EyeTracker(disp, logfile=f"./recordings/{USERNAME}_{rec_started}")
 
 timer = Time()
 tracker.start_recording()
@@ -37,6 +32,6 @@ except KeyboardInterrupt:
     tracker.stop_recording()
     rec_stopped = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
     Path(tracker.datafile.name).rename(
-        f"{SAVE_PATH}/{USERNAME}_{rec_started}_{rec_stopped}.tsv"
+        f"./recordings/{USERNAME}_{rec_started}_{rec_stopped}.tsv"
     )
     disp.close()
