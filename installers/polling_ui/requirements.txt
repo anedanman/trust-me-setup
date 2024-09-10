@@ -1,2 +1,3 @@
 Pillow
-StreamDecktapi
+StreamDeck
+hidapi
