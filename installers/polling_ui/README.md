@@ -6,6 +6,8 @@ The code in this folder is designed to allow users to trigger a poll on the mach
 ## How to use 
 After running `pip install -r requirements.txt` make sure StreamDeck is connected. Then start the button press listener by running `python streamdeck.py`.
 
+## Debugging
+If you encounter an error saying there is no HID API DLL on your machine, copy the contents of the `hidapi/` folder to your environment, for example if you use "trust-me" environment with miniconda, that path would  be C://Users/user/miniconda3/envs/trust-me.
 
 ## Technical details
 
