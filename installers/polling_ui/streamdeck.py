@@ -4,6 +4,7 @@ from PIL import ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 from ui import create_ui, get_questions
+from drivers import set_drivers
 
 poll_names = [
     "emotions",
@@ -87,6 +88,8 @@ def streamdeck_listener():
 
 
 if __name__ == "__main__":
+    set_drivers()
+
     streamdecks = streamdeck_listener()
 
     if streamdecks:

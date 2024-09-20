@@ -14,21 +14,21 @@ import os
 import threading
 import time
 import random
+import subprocess
 
 VERBOSE = False # Debug
-DURATION = 10800 # set glocal sleep time in seconds (3 HRS)
+DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
 CURRENT_Q = 1 # current question
-NEED_PRESS = False
+FIXED_FEEDBACK = False
+FREE_FEEDBACK = False
 USERNAME = 'user1'
 
 # define subprocess
-import subprocess
-level1 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level2 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level3 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level4 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level5 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# labels = {0: 'Very Happy', 1: 'Happy', 2: 'Fine', 3: 'Unhappy', 4: 'Angry'}
+# level1 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
+# level2 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
+# level3 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
+# level4 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
+# level5 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
 
 
 from PIL import Image, ImageDraw, ImageFont
@@ -39,28 +39,30 @@ from StreamDeck.ImageHelpers import PILHelper
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 def alarm(deck):
-    global NEED_PRESS
+    global FIXED_FEEDBACK
 
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
 
-    if not deck.is_open():
-        return
-    while NEED_PRESS:
+    if not deck.is_open(): return
+    
+    while FIXED_FEEDBACK:
         time.sleep(1)
         deck.set_brightness(0)
         time.sleep(1)
         deck.set_brightness(100)
 
-    # finished, back sleep
-    for key in range(deck.key_count()):
-        update_key_image(deck, key, False)
+    # # finished, back sleep
+    # for key in range(deck.key_count()):
+    #     update_key_image(deck, key, False)
 
     return
 
 def timer_function(deck):
-    global NEED_PRESS
+    global FIXED_FEEDBACK
+    global FREE_FEEDBACK
+    
     while deck.is_open():
         # create a new sleep time:
         time_sleep = random.randint(0,DURATION)
@@ -70,90 +72,405 @@ def timer_function(deck):
             if not deck.is_open():
                 break
             time.sleep(1)
-        NEED_PRESS = True
-        alarm(deck)  # Function to call every 10 seconds
+
+        # time up, but wait for FREE_FEEDBACK if is
+        while FREE_FEEDBACK:
+            time.sleep(1)
+
+        FIXED_FEEDBACK = True
+        alarm(deck)  # Function to call every #10 seconds
         time.sleep(time_sleep_left)
 
-
-
-# Generates a custom tile with run-time generated text and custom image via the
-# PIL module.
+# Generates a custom tile with run-time generated text and custom image via the PIL module.
 def render_key_image(deck, icon_filename, font_filename, label_text):
     # Resize the source image asset to best-fit the dimensions of a single key,
     # leaving a margin at the bottom so that we can draw the key title
     # afterwards.
     icon = Image.open(icon_filename)
-    image = PILHelper.create_scaled_key_image(deck, icon, margins=[0, 0, 20, 0])
+    image = PILHelper.create_scaled_key_image(deck, icon, margins=[0, 0, 0, 0])
 
     # Load a custom TrueType font and use it to overlay the key index, draw key
     # label onto the image a few pixels from the bottom of the key.
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype(font_filename, 14)
+    font = ImageFont.truetype(font_filename, 2)
     draw.text((image.width / 2, image.height - 5), text=label_text, font=font, anchor="ms", fill="white")
 
     return PILHelper.to_native_key_format(deck, image)
 
-
 # Returns styling information for a key based on its position and state.
 def get_key_style(deck, key, state): # device, int, False
-    global NEED_PRESS   
+    global FIXED_FEEDBACK
+    global FREE_FEEDBACK   
     global CURRENT_Q
-    # Last button in the example application is the exit button.
-    # exit_key_index = deck.key_count() - 1   # 5
-
-    # if key == exit_key_index:
-    #     name = "exit"
-    #     icon = "{}.png".format("Exit")
-    #     font = "Roboto-Regular.ttf"
-    #     label = "Bye" if state else "Exit"
-    # else:
-    #     name = "emoji"
-    #     icon = "{}{}.png".format("Pressed" if state else "Released",key)
-    #     font = "Roboto-Regular.ttf"
-    #     label = "Recorded" if state else labels[key]
-
-    question_button = 1  # 1
 
     # sleeping render
-    if not NEED_PRESS: 
-        name = "Sleep"
-        icon = "{}.png".format("sleep")
-        font = "Roboto-Regular.ttf"
-        label = ""   
+    if not FIXED_FEEDBACK and not FREE_FEEDBACK: 
+        if key == 0:
+            name = "T"
+            icon = "T.png"
+            label = ""
+        elif key == 1:
+            name = "R"
+            icon = "R.png"
+            label = ""
+        elif key == 2:
+            name = "U"
+            icon = "U.png"
+            label = ""
+        elif key == 3:
+            name = "S"
+            icon = "S.png"
+            label = ""
+        elif key == 4:
+            name = "T"
+            icon = "T.png"
+            label = ""
+        elif key == 5:
+            name = "1"
+            icon = "1.png"
+            label = ""
+        elif key == 6:
+            name = "2"
+            icon = "2.png"
+            label = ""
+        elif key == 7:
+            name = "3"
+            icon = "3.png"
+            label = ""
+        elif key == 8:
+            name = "4"
+            icon = "4.png"
+            label = ""
+        elif key == 9:
+            name = "ME"
+            icon = "ME.png"
+            label = ""
+        elif key == 10:
+            name = "5"
+            icon = "5.png"
+            label = ""
+        elif key == 11:
+            name = "6"
+            icon = "6.png"
+            label = ""
+        elif key == 12:
+            name = "7"
+            icon = "7.png"
+            label = ""
+        elif key == 13:
+            name = "8"
+            icon = "8.png"
+            label = ""
+        elif key == 14:
+            name = "9"
+            icon = "9.png"
+            label = ""
 
-    elif key == question_button:
-        name = "question"
-        icon = "{}{}.png".format("Q",CURRENT_Q)
-        font = "Roboto-Regular.ttf"
-        label = ""
+        icon = "static/"+icon
 
-    elif key == 0:
-        name = "level"
-        icon = "{}{}.png".format("Pressed" if state else "L",1)
-        font = "Roboto-Regular.ttf"
-        label = "Recorded" if state else ""
-    
+    # in FIXED_FEEDBACK or FREE_FEEDBACK mode, render questions
     else:
-        name = "level"
-        icon = "{}{}.png".format("Pressed" if state else "L",key)
-        font = "Roboto-Regular.ttf"
-        label = "Recorded" if state else ""
 
+        if CURRENT_Q == 1: #first question
+            if key == 0:
+                icon = "q1/1.png"
+            elif key == 1:
+                icon = "q1/2.png"
+            elif key == 2:
+                icon = "q1/3.png"
+            elif key == 3:
+                icon = "q1/4.png"
+            elif key == 4:
+                icon = "q1/5.png"
+            elif key == 8:
+                icon = "q1/back.png"
+            elif key == 5:
+                icon = "numero/m3.png"
+            elif key == 10:
+                icon = "numero/m2.png"
+            elif key == 11:
+                icon = "numero/m1.png"
+            elif key == 12:
+                icon = "numero/0.png"
+            elif key == 13:
+                icon = "numero/1.png"
+            elif key == 14:
+                icon = "numero/2.png"
+            elif key == 9:
+                icon = "numero/3.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        elif CURRENT_Q == 2: #second question
+            if key == 0:
+                icon = "q2/1.png"
+            elif key == 1:
+                icon = "q2/2.png"
+            elif key == 2:
+                icon = "q2/3.png"
+            elif key == 3:
+                icon = "q2/4.png"
+            elif key == 4:
+                icon = "q2/5.png"
+            elif key == 8:
+                icon = "q2/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+       
+        elif CURRENT_Q == 3: #third question
+            if key == 0:
+                icon = "q3/1.png"
+            elif key == 1:
+                icon = "q3/2.png"
+            elif key == 2:
+                icon = "q3/3.png"
+            elif key == 3:
+                icon = "q3/4.png"
+            elif key == 8:
+                icon = "q3/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
+            elif key == 4:
+                icon = "static/black.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        elif CURRENT_Q == 4: #fourth question
+            if key == 0:
+                icon = "q4/1.png"
+            elif key == 1:
+                icon = "q4/2.png"
+            elif key == 2:
+                icon = "q4/3.png"
+            elif key == 3:
+                icon = "q4/4.png"
+            elif key == 4:
+                icon = "q4/5.png"
+            elif key == 6:
+                icon = "q4/6.png"
+            elif key == 8:
+                icon = "q4/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        elif CURRENT_Q == 5: #fifth question
+            if key == 0:
+                icon = "q5/1.png"
+            elif key == 1:
+                icon = "q5/2.png"
+            elif key == 2:
+                icon = "q5/3.png"
+            elif key == 3:
+                icon = "q5/4.png"
+            elif key == 4:
+                icon = "q5/5.png"
+            elif key == 8:
+                icon = "q5/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        elif CURRENT_Q == 6: #sixth question
+            if key == 0:
+                icon = "q6/1.png"
+            elif key == 1:
+                icon = "q6/2.png"
+            elif key == 2:
+                icon = "q6/3.png"
+            elif key == 3:
+                icon = "q6/4.png"
+            elif key == 4:
+                icon = "q6/5.png"
+            elif key == 6:
+                icon = "q6/6.png"
+            elif key == 8:
+                icon = "q6/back.png"
+            elif key == 5:
+                icon = "numero/m3.png"
+            elif key == 10:
+                icon = "numero/m2.png"
+            elif key == 11:
+                icon = "numero/m1.png"
+            elif key == 12:
+                icon = "numero/0.png"
+            elif key == 13:
+                icon = "numero/1.png"
+            elif key == 14:
+                icon = "numero/2.png"
+            elif key == 9:
+                icon = "numero/3.png"
+            elif key == 7:
+                icon = "static/black.png"
+ 
+        elif CURRENT_Q == 7: #seventh question
+            if key == 0:
+                icon = "q7/1.png"
+            elif key == 1:
+                icon = "q7/2.png"
+            elif key == 2:
+                icon = "q7/3.png"
+            elif key == 3:
+                icon = "q7/4.png"
+            elif key == 8:
+                icon = "q7/back.png"
+            elif key == 5:
+                icon = "numero/m3.png"
+            elif key == 10:
+                icon = "numero/m2.png"
+            elif key == 11:
+                icon = "numero/m1.png"
+            elif key == 12:
+                icon = "numero/0.png"
+            elif key == 13:
+                icon = "numero/1.png"
+            elif key == 14:
+                icon = "numero/2.png"
+            elif key == 9:
+                icon = "numero/3.png"
+            elif key == 4:
+                icon = "static/black.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        elif CURRENT_Q == 8: #eighth question
+            if key == 0:
+                icon = "q8/1.png"
+            elif key == 1:
+                icon = "q8/2.png"
+            elif key == 2:
+                icon = "q8/3.png"
+            elif key == 3:
+                icon = "q8/4.png"
+            elif key == 8:
+                icon = "q8/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
+            elif key == 4:
+                icon = "static/black.png"
+            elif key == 6:
+                icon = "static/black.png"
+            elif key == 7:
+                icon = "static/black.png"
+
+        else: #ninth question
+            if key == 0:
+                icon = "q9/1.png"
+            elif key == 1:
+                icon = "q9/2.png"
+            elif key == 2:
+                icon = "q9/3.png"
+            elif key == 3:
+                icon = "q9/4.png"
+            elif key == 4:
+                icon = "q9/5.png"
+            elif key == 6:
+                icon = "q9/6.png"
+            elif key == 7:
+                icon = "q9/7.png"
+            elif key == 8:
+                icon = "q9/back.png"
+            elif key == 5:
+                icon = "numero/0.png"
+            elif key == 10:
+                icon = "numero/1.png"
+            elif key == 11:
+                icon = "numero/2.png"
+            elif key == 12:
+                icon = "numero/3.png"
+            elif key == 13:
+                icon = "numero/4.png"
+            elif key == 14:
+                icon = "numero/5.png"
+            elif key == 9:
+                icon = "numero/6.png"
 
     return {
-        "name": name,
+        "name": "",
         "icon": os.path.join(ASSETS_PATH, icon),
-        "font": os.path.join(ASSETS_PATH, font),
-        "label": label
+        "font": os.path.join(ASSETS_PATH, "Roboto-Regular.ttf"),
+        "label": ""
     }
-
 
 # Creates a new key image based on the key index, style and current key state
 # and updates the image on the StreamDeck.
 def update_key_image(deck, key, state): # device, int, False
     # Determine what icon and label to use on the generated key.
     key_style = get_key_style(deck, key, state)
-
     # Generate the custom key with the requested image and label.
     image = render_key_image(deck, key_style["icon"], key_style["font"], key_style["label"])
 
@@ -163,97 +480,141 @@ def update_key_image(deck, key, state): # device, int, False
         # Update requested key with the generated image.
         deck.set_key_image(key, image)
 
-
 # Prints key state change information, updates rhe key image and performs any
 # associated actions when a key is pressed.
 def key_change_callback(deck, key, state):
-    global NEED_PRESS
-
-    # not recorded if no need to
-    if not NEED_PRESS:
-        return
-
-    # else starting from Q1
+    global FIXED_FEEDBACK
+    global FREE_FEEDBACK
     global CURRENT_Q
-    
-    print(CURRENT_Q)
 
-    update_key_image(deck, 1, state) # question key 
-    update_key_image(deck, key, state)
-    key_style = get_key_style(deck, key, state)
+    # one press makes two callbacks (state: True - False)
+    # pressed reactions only
+    if not state: return
 
-    # dont press the question
-    if key == 1:
-        return
-
-    # dont care realizing key
-    if not state:
-        return
-
-    subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
-
-    # not last question
-    if CURRENT_Q <9:
-        if key==0:
-            subprocess.run(level1, shell=True, check=True)
-        elif key==2:
-            subprocess.run(level2, shell=True, check=True)
-        elif key==3:
-            subprocess.run(level3, shell=True, check=True)
-        elif key==4:
-            subprocess.run(level4, shell=True, check=True)
+    # receiving feedback from FREE_FEEDBACK
+    if FREE_FEEDBACK:
+        # misclick
+        if key in [0, 1, 2, 3, 4, 6, 7]:
+            return
+        
+        # back button   
+        elif key == 8:
+            FREE_FEEDBACK = False
+            CURRENT_Q = 1
+            # render static and then return
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+            return
+        
+        # feedbacked click
         else:
-            subprocess.run(level5, shell=True, check=True)
-        CURRENT_Q = CURRENT_Q + 1
+            # record question
+            subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            # record answer
+            default_answer = 0
+            if key == 5:
+                default_answer = 0
+            elif key == 10:
+                default_answer = 1
+            elif key == 11:
+                default_answer = 2
+            elif key == 12:
+                default_answer = 3
+            elif key == 13:
+                default_answer = 4
+            elif key == 14:
+                default_answer = 5
+            else:
+                default_answer = 6
 
-    # last question
+            if CURRENT_Q in [1,6,7]:
+                default_answer = default_answer - 3
+
+            subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            
+            FREE_FEEDBACK = False
+            CURRENT_Q = 1
+            # render static and then return
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+            return
+            
+
+    # in static, enter FREE_FEEDBACK or misclick
+    elif not FIXED_FEEDBACK:
+
+        # misclick
+        if key in [0, 1, 2, 3, 4, 9]: return
+        
+        # FREE_FEEDBACK
+        FREE_FEEDBACK = True
+        if key == 5:
+            CURRENT_Q = 1
+        elif key == 6:
+            CURRENT_Q = 2
+        elif key == 7:
+            CURRENT_Q = 3
+        elif key == 8:
+            CURRENT_Q = 4
+        elif key == 10:
+            CURRENT_Q = 5
+        elif key == 11:
+            CURRENT_Q = 6
+        elif key == 12:
+            CURRENT_Q = 7
+        elif key == 13:
+            CURRENT_Q = 8
+        elif key == 14:
+            CURRENT_Q = 9
+
+        # render question and then return
+        for key in range(deck.key_count()):
+            update_key_image(deck, key, False)
+        return        
+
+    # FIXED_FEEDBACK loop
     else:
-        if key==0:
-            subprocess.run(level1, shell=True, check=True)
-        elif key==2:
-            subprocess.run(level2, shell=True, check=True)
-        elif key==3:
-            subprocess.run(level3, shell=True, check=True)
-        elif key==4:
-            subprocess.run(level4, shell=True, check=True)
+        # record question
+        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+
+        #invalid click
+        if key in [0,1,2,3,4,6,7,8]:
+            return
+
+        # record answer
+        default_answer = 0
+        if key == 5:
+            default_answer = 0
+        elif key == 10:
+            default_answer = 1
+        elif key == 11:
+            default_answer = 2
+        elif key == 12:
+            default_answer = 3
+        elif key == 13:
+            default_answer = 4
+        elif key == 14:
+            default_answer = 5
         else:
-            subprocess.run(level5, shell=True, check=True)
-        CURRENT_Q = 1
-        NEED_PRESS = False
+            default_answer = 6
 
-    # Print new key state
-    # if VERBOSE:
-    #     print("Key {} = {}".format(key, state), flush=True)
-    # Update the key image based on the new key state.
-    # update_key_image(deck, key, state)
+        if CURRENT_Q in [1,6,7]:
+            default_answer = default_answer - 3
 
-    # # Check if the key is changing to the pressed state.
-    # if state:
-    #     key_style = get_key_style(deck, key, state)
+        subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+        
+        if CURRENT_Q < 9:
+            CURRENT_Q = CURRENT_Q + 1
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+            return
 
-    #     if key_style["name"] != "exit":
-    #         if key==0:
-    #             subprocess.run(command_very_happy, shell=True, check=True)
-    #         elif key==1:
-    #             subprocess.run(command_happy, shell=True, check=True)
-    #         elif key==2:
-    #             subprocess.run(command_fine, shell=True, check=True)
-    #         elif key==3:
-    #             subprocess.run(command_unhappy, shell=True, check=True)
-    #         else:
-    #             subprocess.run(command_angry, shell=True, check=True)
-    #         NEED_PRESS = False
-
-        # When an exit button is pressed, close the application.
-        # if key_style["name"] == "exit":
-        #     # Use a scoped-with on the deck to ensure we're the only thread
-        #     # using it right now.
-        #     with deck:
-        #         # Reset deck, clearing all button images.
-        #         dec                passk.reset()
-
-        #         # Close deck handle, terminating internal worker threads.
-        #         deck.close()
+        else:
+            CURRENT_Q = 1
+            FIXED_FEEDBACK = False  
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+            return     
 
 
 if __name__ == "__main__":
@@ -275,6 +636,10 @@ if __name__ == "__main__":
         # Set initial key images.
         for key in range(deck.key_count()):
             update_key_image(deck, key, False)
+
+        # print("debug")
+        # time.sleep(1)
+        # deck.close()
 
 
         # Register callback function for when a key state changes.
