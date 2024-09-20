@@ -117,4 +117,4 @@ if __name__ == "__main__":
     lep = Thermal()
     lep.initCamera()
     lep.configureCamera()
-    lep.captureImages(name="test", seconds=-1, to_celsius=True, start_event=None)
+    lep.captureImages(name="test", seconds=10, to_celsius=True, start_event=None)

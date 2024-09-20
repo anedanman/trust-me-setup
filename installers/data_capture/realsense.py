@@ -73,7 +73,11 @@ class Realsense(Camera):
             os.makedirs(f"{self.save_directory}/rgb")
             os.makedirs(f"{self.save_directory}/depth")
 
-        
+        try:
+            self.pipeline.stop()
+        except:
+            pass
+       
         self.profile = self.pipeline.start(self.config)
 
         if seconds is None or seconds < 0:
@@ -100,6 +104,8 @@ class Realsense(Camera):
             os.makedirs(f"{self.save_directory}/rgb", exist_ok=True)
             os.makedirs(f"{self.save_directory}/depth", exist_ok=True)
 
+            # For depth, capture at 10 FPS
+            counter = 0
             while time.time() - start_time < seconds:
                 saved = False
                 frames = self.pipeline.wait_for_frames(10000)
@@ -111,6 +117,7 @@ class Realsense(Camera):
                 if not depth_frame or not color_frame:
                     print("No frame received, skipping...")
                     continue
+                counter += 1
 
                 # Convert frames to numpy arrays
                 depth_image = np.asanyarray(depth_frame.get_data(), dtype=np.float32) / 65535.0
@@ -124,11 +131,12 @@ class Realsense(Camera):
                 out.write(color_image)
 
                 # Store depth frame and timestamp in memory
-                chunk_frames.append(depth_image)
-                chunk_timestamps.append(timestamp)
+                if counter % 3 == 0:
+                    chunk_frames.append(depth_image)
+                    chunk_timestamps.append(timestamp)
 
                 # Check if the chunk is full (30 minutes of data)
-                if len(chunk_frames) >= self.chunk_size:
+                if len(chunk_frames) // (self.fps // 3) >= self.chunk_size:
                     depth_chunk_path = f"{self.save_directory}/depth/{name}_{current_ft}.h5"
                     save_depth_chunk(depth_chunk_path, chunk_frames, chunk_timestamps)
 

@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("-n", "--name", default=uname, type=str)
-parser.add_argument("-d", "--duration", default="-1", type=int)
+parser.add_argument("-d", "--duration", default="28800", type=int)
 
 
 hw_config = None
@@ -51,7 +51,7 @@ hw_config = None
 class CaptureData:
     WARMUP_TIME = 30
 
-    def __init__(self, filename="test", seconds=-1, show_rgb=False):
+    def __init__(self, filename="test", seconds=28800, show_rgb=False):
         global hw_config
 
         self.show_rgb = show_rgb

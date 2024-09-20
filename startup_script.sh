@@ -59,8 +59,8 @@ $("$TOBII_PATH") &
 echo "Started recording tobii"
 
 # Run process in background
-$(python "$STREAMDECK_PATH") &
-echo "Streamdeck running"
+# $(python "$STREAMDECK_PATH") &
+# echo "Streamdeck running"
 
 
 

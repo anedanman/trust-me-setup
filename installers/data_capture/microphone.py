@@ -35,12 +35,19 @@ class Mic:
         self.recording.append(indata.copy())
 
     def find_default_sound_device(self, devs):
+        brio = False
         for dev in devs:
             if dev["max_input_channels"] > 0:
-                return dev["index"]
-            # if "brio" in dev["name"].lower():
-                # return dev["index"]
-        return sd.default.device
+                if "brio" in dev["name"].lower():
+                    print("Using BRIO Mic")
+                    brio = True        
+                    return dev["index"]
+
+        if not brio:
+            print("Can't find BRIO microphone. Try plugging BRIO in and out.")
+
+        exit()
+        # return sd.default.device
         
 
     def record(self, name, duration, event):
@@ -86,8 +93,8 @@ class Mic:
     def save_recording(self):
         if self.recording:
             # Convert list of recordings to a numpy array
-            recording_np = np.concatenate(np.array(self.recording), axis=0)
-
+            recording_np = np.concatenate([np.array(chunk) for chunk in self.recording], axis=0)
+            
             # Ensure the directory exists
             if not os.path.exists(self.save_directory):
                 os.makedirs(self.save_directory)
