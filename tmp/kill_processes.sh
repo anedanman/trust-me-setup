@@ -1,21 +1,29 @@
 #!/bin/bash
-echo "Killing PIDS"
+echo "Killing PIDs"
 
-filenames=("pids/audio" "pids/brio" "pids/depth" "pids/thermal" "pids/tobii" "pids/capture_data.pid")
+# Correct the home directory expansion
+PREFIX="/home/dis/trust-me-setup/tmp"
 
+# List of PID files
+filenames=("pids/audio" "pids/brio" "pids/depth" "pids/thermal" "pids/tobiish" "pids/tobii" "pids/capture_data.pid")
+
+# Loop over each filename and attempt to kill the process
 for filename in "${filenames[@]}"; do
-  if [[ -f "$filename" ]]; then  # Fixed: added a space before ]]
-    pid=$(head -n 1 "$filename")
+  fullpath="$PREFIX/$filename"
 
-    # Send interrupt signal
+  if [[ -f "$fullpath" ]]; then
+    # Read the first line of the file (PID)
+    pid=$(head -n 1 "$fullpath")
+
+    # Check if it's a valid PID (numeric)
     if [[ $pid =~ ^[0-9]+$ ]]; then
+      echo "Sending SIGINT to PID $pid (from $filename)"
       kill -2 "$pid"
     else
-      echo "Invalid PID: $pid in $filename"
+      echo "Invalid PID: $pid in $fullpath"
     fi
   else
-    echo "File not found: $filename"
+    echo "File not found: $fullpath"
   fi
 done
-
 

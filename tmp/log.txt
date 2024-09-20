@@ -607,3 +607,82 @@ Started recording tobii
 Streamdeck running
 ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
 ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@60.530] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@60.530] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@71.819] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video0): select() timeout.
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+/home/dis/trust-me-setup/startup_script.sh: line 54: Run: command not found
+python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
+/home/dis/trust-me-setup/installers/tobii/run_tobii.sh: line 4:  2692 Aborted                 /home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py
+Done
+pet 20 sep 2024 10:31:50 CEST
+conda 24.4.0
+Video now available. Starting script...
+Brio channel: 10
+Brio channel: 8
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@30.515] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video5): can't open camera by index
+[ WARN:0@30.516] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@41.809] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video4): select() timeout.
+Expression 'alsa_snd_pcm_start( stream->capture.pcm )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 2929
+Expression 'AlsaStart( stream, 0 )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 3241
+Expression 'AlsaRestart( self )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 3308
+Expression 'PaAlsaStream_HandleXrun( self )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 3934
+Expression 'PaAlsaStream_WaitForFrames( stream, &framesAvail, &xrun )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 4269
+python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
+/home/dis/trust-me-setup/installers/tobii/run_tobii.sh: line 7:  3308 Aborted                 /home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py
+pet 20 sep 2024 10:36:47 CEST
+conda 24.4.0
+Video now available. Starting script...
+Brio channel: 10
+Brio channel: 8
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@30.492] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@30.492] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Process Process-3:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/dis/trust-me-setup/installers/data_capture/thermal.py", line 85, in captureImages
+    frame = self.camera.grab()  # .astype(np.float32)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/flirpy/camera/lepton.py", line 158, in grab
+    res, image = self.cap.read()
+KeyboardInterrupt
+python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
+pet 20 sep 2024 10:42:15 CEST
+conda 24.4.0
+Video now available. Starting script...
+Brio channel: 10
+Brio channel: 8
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+[ WARN:0@30.491] global cap_v4l.cpp:999 open VIDEOIO(V4L2:/dev/video1): can't open camera by index
+[ WARN:0@30.491] global cap.cpp:342 open VIDEOIO(V4L2): backend is generally available but can't be used to capture by index
+[ WARN:0@41.779] global cap_v4l.cpp:1136 tryIoctl VIDEOIO(V4L2:/dev/video0): select() timeout.
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
