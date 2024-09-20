@@ -35,7 +35,7 @@ with open("installers/data_capture/hardware_config.json", "r") as fp:
             except ValueError:
                 channel = int(dev[-1])
             config["rgb"]["channel"] = channel
-            print(f"StreamCam channel: {channel}")
+            # print(f"StreamCam channel: {channel}")
         elif "brio" in info:
             try:
                 channel = int(dev[-2:])

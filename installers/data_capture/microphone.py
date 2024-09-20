@@ -34,10 +34,14 @@ class Mic:
             print(f"Error: {status}", flush=True)
         self.recording.append(indata.copy())
 
-    def find_streamcam_mic(self, devs):
+    def find_default_sound_device(self, devs):
         for dev in devs:
-            if "StreamCam" in dev["name"]:
+            if dev["max_input_channels"] > 0:
                 return dev["index"]
+            # if "brio" in dev["name"].lower():
+                # return dev["index"]
+        return sd.default.device
+        
 
     def record(self, name, duration, event):
 
@@ -58,7 +62,7 @@ class Mic:
         start_time = pytime.time()
 
         devs = sd.query_devices()
-        dev_id = self.find_streamcam_mic(devs)
+        dev_id = self.find_default_sound_device(devs)
 
         with sd.InputStream(
             device=dev_id,
@@ -78,18 +82,31 @@ class Mic:
                 self.is_recording = False
                 self.save_recording()
 
+                
     def save_recording(self):
         if self.recording:
-            recording_np = np.concatenate(np.array(self.recording, dtype=object), axis=0)
-            filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+            # Convert list of recordings to a numpy array
+            recording_np = np.concatenate(np.array(self.recording), axis=0)
 
+            # Ensure the directory exists
             if not os.path.exists(self.save_directory):
                 os.makedirs(self.save_directory)
 
-            write(filename, self.sampling_rate, recording_np)
+            # Convert to a supported data type before saving
+            if recording_np.dtype == 'float64':  # sounddevice might return float64
+                # Normalize and convert to int16
+                recording_int16 = np.int16(recording_np / np.max(np.abs(recording_np)) * 32767)
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                write(filename, self.sampling_rate, recording_int16)
+            else:
+                # Save directly if already a supported type
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                write(filename, self.sampling_rate, recording_np)
+
             print(f"Recording saved to {filename}")
         else:
             print("No recording to save.")
+
 
 
 if __name__ == "__main__":
