@@ -52,6 +52,7 @@ class Mic:
         print("Recording audio... Press Ctrl+C to stop.")
 
         start_time = pytime.time()
+        start_timef = formatted_time()
 
         devs = sd.query_devices()
         dev_id = self.find_streamcam_mic(devs)
@@ -72,12 +73,15 @@ class Mic:
                 print("Recording stopped by user.")
             finally:
                 self.is_recording = False
-                self.save_recording()
+                self.save_recording(start_timef)
 
-    def save_recording(self):
+    def save_recording(self, start_timef):
         if self.recording:
-            recording_np = np.concatenate(np.array(self.recording), axis=0)
-            filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+            # print('recording shapes', [r.shape for r in self.recording])
+            recording_np = np.concatenate(self.recording, axis=0)
+            # print('recording_np shape', recording_np.shape, recording_np.dtype)
+            # print('max min', recording_np.max(), recording_np.min())
+            filename = f"{self.save_directory}/{self.name}_{start_timef}.wav"
 
             if not os.path.exists(self.save_directory):
                 os.makedirs(self.save_directory)
@@ -86,3 +90,10 @@ class Mic:
             print(f"Recording saved to {filename}")
         else:
             print("No recording to save.")
+
+
+if __name__ == "__main__":
+    mic = Mic(
+        # sampling_rate=16000
+        )
+    mic.record("test", 10, None)

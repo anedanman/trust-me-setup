@@ -20,7 +20,8 @@ class Thermal(Camera):
         fps=8,
         resolution=(160, 120),
         save_directory="data/thermal",
-        chunk_size=1200,
+        # chunk_size=1200,
+        chunk_size=5,
     ):
         super(Thermal, self).__init__(
             fps, resolution, save_directory, chunk_size=chunk_size
@@ -38,10 +39,10 @@ class Thermal(Camera):
 
         return img / 100 - 273.15
 
-    def saveToDisk(self, name, img):
+    def saveToDisk(self, name, img, start_timef):
         if img is not None and len(img) > 0:
             tifffile.imwrite(
-                f"{self.save_directory}/{name}_{formatted_time()}.tiff",
+                f"{self.save_directory}/{name}_{start_timef}.tiff",
                 img,
                 photometric="minisblack",
                 bigtiff=True,
@@ -62,6 +63,7 @@ class Thermal(Camera):
         self.chunk_size: interval for saving video in seconds"""
 
         self.initCamera()
+        start_timef = formatted_time()
 
         if start_event:
             start_event.wait()
@@ -94,7 +96,8 @@ class Thermal(Camera):
 
                 # Write to disk
                 if len(video) > 0 and time.time() - current_time >= self.chunk_size:
-                    self.saveToDisk(name, video)
+                    self.saveToDisk(name, video, start_timef)
+                    start_timef = formatted_time()
 
                     # Empty video array
                     video = []
@@ -107,7 +110,7 @@ class Thermal(Camera):
                 print(e)
 
         finally:
-            self.saveToDisk(name, video)
+            self.saveToDisk(name, video, start_timef)
             print("Done...[thermal.py]")
 
 
@@ -115,4 +118,4 @@ if __name__ == "__main__":
     lep = Thermal()
     lep.initCamera()
     lep.configureCamera()
-    lep.captureImages(name="test", seconds=-1, to_celsius=True, start_event=None)
+    lep.captureImages(name="test", seconds=15, to_celsius=True, start_event=None)

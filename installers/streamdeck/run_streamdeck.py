@@ -14,21 +14,19 @@ import os
 import threading
 import time
 import random
+import argparse
 
 VERBOSE = False # Debug
-DURATION = 10800 # set glocal sleep time in seconds (3 HRS)
+DURATION = 60 * 60 * 2 # set local sleep time in seconds (3 HRS=10800s)
 CURRENT_Q = 1 # current question
 NEED_PRESS = False
 USERNAME = 'user1'
 
 # define subprocess
 import subprocess
-level1 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level2 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level3 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level4 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-level5 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# labels = {0: 'Very Happy', 1: 'Happy', 2: 'Fine', 3: 'Unhappy', 4: 'Angry'}
+def generate_level_command(level, username):
+    command = f"/bin/bash -c 'echo \"$(date) Feedback Level: {level}.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{username}_$(date +\"%Y-%m-%d\")'"
+    return command
 
 
 from PIL import Image, ImageDraw, ImageFont
@@ -195,29 +193,29 @@ def key_change_callback(deck, key, state):
     # not last question
     if CURRENT_Q <9:
         if key==0:
-            subprocess.run(level1, shell=True, check=True)
+            subprocess.run(generate_level_command(1, USERNAME), shell=True, check=True)
         elif key==2:
-            subprocess.run(level2, shell=True, check=True)
+            subprocess.run(generate_level_command(2, USERNAME), shell=True, check=True)
         elif key==3:
-            subprocess.run(level3, shell=True, check=True)
+            subprocess.run(generate_level_command(3, USERNAME), shell=True, check=True)
         elif key==4:
-            subprocess.run(level4, shell=True, check=True)
+            subprocess.run(generate_level_command(4, USERNAME), shell=True, check=True)
         else:
-            subprocess.run(level5, shell=True, check=True)
+            subprocess.run(generate_level_command(5, USERNAME), shell=True, check=True)
         CURRENT_Q = CURRENT_Q + 1
 
     # last question
     else:
         if key==0:
-            subprocess.run(level1, shell=True, check=True)
+            subprocess.run(generate_level_command(1, USERNAME), shell=True, check=True)
         elif key==2:
-            subprocess.run(level2, shell=True, check=True)
+            subprocess.run(generate_level_command(2, USERNAME), shell=True, check=True)
         elif key==3:
-            subprocess.run(level3, shell=True, check=True)
+            subprocess.run(generate_level_command(3, USERNAME), shell=True, check=True)
         elif key==4:
-            subprocess.run(level4, shell=True, check=True)
+            subprocess.run(generate_level_command(4, USERNAME), shell=True, check=True)
         else:
-            subprocess.run(level5, shell=True, check=True)
+            subprocess.run(generate_level_command(5, USERNAME), shell=True, check=True)
         CURRENT_Q = 1
         NEED_PRESS = False
 
@@ -255,8 +253,14 @@ def key_change_callback(deck, key, state):
         #         # Close deck handle, terminating internal worker threads.
         #         deck.close()
 
-
-if __name__ == "__main__":
+def main():
+    # wait for DURATION seconds
+    global USERNAME  
+    parser = argparse.ArgumentParser(description="Run StreamDeck")
+    parser.add_argument('--uname', type=str, help='Username for the application')
+    args = parser.parse_args()
+    if args.uname:
+        USERNAME = args.uname
     streamdecks = DeviceManager().enumerate()
 
     if len(streamdecks) and VERBOSE:
@@ -289,3 +293,6 @@ if __name__ == "__main__":
                 t.join()
             except RuntimeError:
                 pass
+
+if __name__ == "__main__":
+    main()

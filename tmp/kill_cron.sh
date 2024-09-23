@@ -2,9 +2,9 @@
 
 # Improvement idea: Remap the power button to run this script and add "shutdown now" at the end of this file.
 
-pgid_path="/home/dis/trust-me-setup/tmp/startup_script.pid"
+pgid_path="/home/trustme/trust-me-setup/tmp/startup_script.pid"
 
-echo $(ls /home/dis/trust-me-setup/tmp)
+echo $(ls /home/trustme/trust-me-setup/tmp)
 
 # Read the PID from the file
 if [ -f "$pgid_path" ]; then

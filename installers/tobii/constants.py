@@ -1,7 +1,7 @@
 # constants for PyGaze_trackertest.py
 
 DISPTYPE = "pygame"
-DISPSIZE = 1920, 1080
+DISPSIZE = 3840,2160
 
 DUMMYMODE = False
 TRACKERTYPE = "tobii"

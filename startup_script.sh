@@ -27,12 +27,13 @@ fi
 cd "$HOME/trust-me-setup/"
 
 # Paths
+UNAME="TestUser";
 TOBII_PATH="$HOME/trust-me-setup/installers/tobii/run_tobii.sh";
 RGB_PATH="$HOME/trust-me-setup/installers/data_capture/capture_data.py";
 STREAMDECK_PATH="$HOME/trust-me-setup/installers/streamdeck/run_streamdeck.py";
 
 # Activate environment
-conda activate tobii
+conda activate recording
 
 if [ ! -f "$TOBII_PATH" ];
 then
@@ -49,17 +50,17 @@ fi
 chmod +x "$TOBII_PATH"
 
 # Run process in background
-$("$TOBII_PATH") &
+$("$TOBII_PATH" $UNAME) &
 echo "Started recording tobii"
 
 # Run process in background
-$(python "$STREAMDECK_PATH") &
+$(python "$STREAMDECK_PATH" --uname $UNAME) &
 echo "Streamdeck running"
 
 python "$HOME/trust-me-setup/installers/data_capture/auto_config_hw.py"
 
 # Run process in background
-$(python "$RGB_PATH") &
+$(python "$RGB_PATH" -n $UNAME) &
 echo "Started recording RGB"
 
 

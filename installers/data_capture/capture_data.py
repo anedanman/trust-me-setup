@@ -61,17 +61,17 @@ class CaptureData:
         """Creates objects with properties specified in the hardware_config.json"""
 
         # Channel = camera id, that determines which of the cameras is the RGB one - configure for your setup
-        self.rgb = RGBCamera(
-            fps=self.hw_config["rgb"]["fps"],
-            resolution=(
-                self.hw_config["rgb"]["resolution_x"],
-                self.hw_config["rgb"]["resolution_y"],
-            ),
-            channel=self.hw_config["rgb"]["channel"],
-            store_video=True,
-            save_directory="installers/data_collection/data/rgb",
-            chunk_size=self.hw_config["rgb"]["chunk_length"],
-        )
+        # self.rgb = RGBCamera(
+        #     fps=self.hw_config["rgb"]["fps"],
+        #     resolution=(
+        #         self.hw_config["rgb"]["resolution_x"],
+        #         self.hw_config["rgb"]["resolution_y"],
+        #     ),
+        #     channel=self.hw_config["rgb"]["channel"],
+        #     store_video=True,
+        #     save_directory="installers/data_collection/data/rgb",
+        #     chunk_size=self.hw_config["rgb"]["chunk_length"],
+        # )
 
         self.hires = RGBCamera(
             fps=self.hw_config["hires"]["fps"],
@@ -123,10 +123,10 @@ class CaptureData:
         self.start_event = multiprocessing.Event()
 
         #  RGB
-        self.rgb_process = multiprocessing.Process(
-            target=self.rgb.captureImages,
-            args=(name, seconds, self.show_rgb, self.start_event),
-        )
+        # self.rgb_process = multiprocessing.Process(
+        #     target=self.rgb.captureImages,
+        #     args=(name, seconds, self.show_rgb, self.start_event),
+        # )
 
         self.hires_process = multiprocessing.Process(
             target=self.hires.captureImages,
@@ -149,7 +149,7 @@ class CaptureData:
 
     def capture(self):
         process_list = [
-            self.rgb_process,
+            # self.rgb_process,
             self.hires_process,
             self.thermal_process,
             self.realsense_process,

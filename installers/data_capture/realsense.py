@@ -52,7 +52,7 @@ class Realsense(Camera):
             cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET
         )
 
-    def captureImages(self, name="out", seconds=10, start_event=None):
+    def captureImages(self, name="out", seconds=20, start_event=None):
         self.initCamera()
         self.configureCamera()
 
@@ -110,7 +110,7 @@ class Realsense(Camera):
 
                 out.write(color_image)
 
-                if len(chunk_frames) >= int(self.fps) * 60 * 30:
+                if len(chunk_frames) >= int(self.fps) * 60* 5:
                     # Store depth frames and timestamps in a chunk
                     with h5py.File(
                         f"{self.save_directory}/depth/{name}_{current_ft}.h5", "w"
@@ -127,6 +127,14 @@ class Realsense(Camera):
                     current_ft = formatted_time()
 
             # Store remaining depth frames and timestamps
+            
+
+        except KeyboardInterrupt:
+            pass
+
+        finally:
+            out.release()
+            self.pipeline.stop()
             if chunk_frames:
                 with h5py.File(
                     f"{self.save_directory}/depth/{name}_{current_ft}.h5", "w"
@@ -138,17 +146,11 @@ class Realsense(Camera):
                         compression_opts=9
                     )
                     # hf.create_dataset("timestamps", data=np.array(chunk_timestamps, dtype='S'))
-
-        except KeyboardInterrupt:
-            pass
-
-        finally:
-            out.release()
-            self.pipeline.stop()
+            
 
 
 if __name__ == "__main__":
     cam = Realsense()
     cam.initCamera()
     cam.configureCamera()
-    cam.captureImages(seconds=15)
+    cam.captureImages(seconds=25)
