@@ -2,7 +2,7 @@ import os
 import time
 from datetime import datetime
 from abc import ABC
-
+from utils import save_pid
 import cv2
 
 
@@ -66,7 +66,9 @@ class RGBCamera(Camera):
 
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
-    def captureImages(self, name="out", seconds=10, show_video=False, start_event=None):
+    def captureImages(self, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
+        save_pid(process_type)
+        
         self.initCamera(camera_id=self.channel)
         self.configureCamera()
 
@@ -116,10 +118,10 @@ class RGBCamera(Camera):
                         )
                         img_id += 1
 
-                    if show_video:
-                        cv2.imshow("rec", frame)
-                        if cv2.waitKey(1) == ord("q"):
-                            break
+                    # if show_video:
+                        # cv2.imshow("rec", frame)
+                        # if cv2.waitKey(1) == ord("q"):
+                            # break
 
                 if self.store_video:
                     out.release()

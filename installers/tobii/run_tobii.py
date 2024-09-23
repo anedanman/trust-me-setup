@@ -9,6 +9,11 @@ from pygaze.display import Display
 from pygaze.eyetracker import EyeTracker
 from pygaze.time import Time
 
+def save_pid():
+    pid = os.getpid()
+    with open(f"~/trust-me-setup/tmp/pids/{tobii}", "w") as f:
+        f.write(str(pid))
+
 
 disp = Display()
 disp.close()

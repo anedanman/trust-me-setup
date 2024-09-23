@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import sounddevice as sd
 from scipy.io.wavfile import write
+from utils import save_pid
 
 
 def formatted_time():
@@ -14,7 +15,7 @@ def formatted_time():
 class Mic:
     def __init__(
         self,
-        sampling_rate=44100,
+        sampling_rate=16000,
         n_channels=1,
         save_directory="data/audio",
         chunk_length=60 * 60 * 2,
@@ -33,12 +34,26 @@ class Mic:
             print(f"Error: {status}", flush=True)
         self.recording.append(indata.copy())
 
-    def find_streamcam_mic(self, devs):
+    def find_default_sound_device(self, devs):
+        brio = False
         for dev in devs:
-            if "StreamCam" in dev["name"]:
-                return dev["index"]
+            if dev["max_input_channels"] > 0:
+                if "brio" in dev["name"].lower():
+                    print("Using BRIO Mic")
+                    brio = True        
+                    return dev["index"]
+
+        if not brio:
+            print("Can't find BRIO microphone. Try plugging BRIO in and out.")
+
+        exit()
+        # return sd.default.device
+        
 
     def record(self, name, duration, event):
+
+        save_pid("audio")
+        
         if duration is None or duration < 0:
             duration = np.inf
 
@@ -54,7 +69,7 @@ class Mic:
         start_time = pytime.time()
 
         devs = sd.query_devices()
-        dev_id = self.find_streamcam_mic(devs)
+        dev_id = self.find_default_sound_device(devs)
 
         with sd.InputStream(
             device=dev_id,
@@ -74,15 +89,33 @@ class Mic:
                 self.is_recording = False
                 self.save_recording()
 
+                
     def save_recording(self):
         if self.recording:
-            recording_np = np.concatenate(np.array(self.recording), axis=0)
-            filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
-
+            # Convert list of recordings to a numpy array
+            recording_np = np.concatenate([np.array(chunk) for chunk in self.recording], axis=0)
+            
+            # Ensure the directory exists
             if not os.path.exists(self.save_directory):
                 os.makedirs(self.save_directory)
 
-            write(filename, self.sampling_rate, recording_np)
+            # Convert to a supported data type before saving
+            if recording_np.dtype == 'float64':  # sounddevice might return float64
+                # Normalize and convert to int16
+                recording_int16 = np.int16(recording_np / np.max(np.abs(recording_np)) * 32767)
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                write(filename, self.sampling_rate, recording_int16)
+            else:
+                # Save directly if already a supported type
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                write(filename, self.sampling_rate, recording_np)
+
             print(f"Recording saved to {filename}")
         else:
             print("No recording to save.")
+
+
+
+if __name__ == "__main__":
+    mic = Mic()    
+    mic.record(name="test", duration=10, event=None)
