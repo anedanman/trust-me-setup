@@ -1,1 +1,0 @@
-[('Since the last singal occured, was there any interpersonal conflict among the people you work with?', 1)]

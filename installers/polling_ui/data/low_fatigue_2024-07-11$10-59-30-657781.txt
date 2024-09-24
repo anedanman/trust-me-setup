@@ -1,1 +1,0 @@
-[('How one feels at the moment is ofted described in terms of the state of charge of a battery, ranging from depleted to full of energy. Please indicate which of the following best describes your current state.', 1)]
