@@ -14,7 +14,7 @@ python run_streamdeck.py
 # python run_streamdeck_6.py
 ```
 ## How to use
-### sleeping state
+### sleeping mode
 the device shows "trust me" with icons for different questions on the panel after launching.
 
 ### self-report/free-report
