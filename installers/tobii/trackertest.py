@@ -13,6 +13,7 @@
 
 import os
 import random
+import copy
 
 from pygaze.defaults import *
 from constants import *
@@ -26,21 +27,7 @@ from pygaze.time import Time
 from pygaze.logfile import Logfile
 from datetime import datetime
 
-# from pygaze.plugins.aoi import AOI
-# from pygaze.plugins.frl import FRL
-# from pygaze.plugins.gazecursor import GazeCursor
-
-
-# # # # #
-# directory stuff
-
 DIR = os.path.split(os.path.abspath(__file__))[0]
-# soundfile = os.path.join(DIR, 'bark.ogg')
-# imagefile = os.path.join(DIR, 'kitten.png')
-
-
-# # # # #
-# create instances
 
 # initialize the display
 disp = Display()
@@ -54,21 +41,9 @@ tracker = EyeTracker(disp)
 # initialize a keyboard
 kb = Keyboard(keylist=["space"], timeout=None)
 
-# initialize a sound
-# snd = Sound(soundfile=soundfile)
-
-# initialize a Timer
 # initialize the current time for the file name
 rec_started = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 timer = Time()
-
-# create a new logfile
-# log = Logfile(filename="test")
-# log.write(["test", "time"])
-
-
-# # # # #
-# welcome
 
 scr.draw_text(
     "Welcome to the PyGaze Supertest!\n\nYou're going to be testing \
@@ -77,27 +52,20 @@ to start!\n\n\nP.S. If you see this, the following functions work: \
 \n- Screen.draw_text \
 \n- Disp.fill \
 \n- Disp.show \
-\nAwesome!"
+\nAwesome!",
+    fontsize=50
 )
 disp.fill(scr)
 t1 = disp.show()
 t1 = "{:%Y-%m-%d$%H-%M-%S}".format(datetime.now())
 # log.write(["welcome", t1])
-kb.get_key()
 
 
-# # # # #
-# test EyeTracker
-
-# EyeTracker.connected
-# EyeTracker.log_var
-# EyeTracker.pupil_size
-# EyeTracker.send_command
-# EyeTracker.wait_for_event
 
 scr.clear()
 scr.draw_text(
-    "We're now going to test the eyetracker module. Press Space to start!", fontsize=30
+    "We're now going to test the eyetracker module. Press Space to start!", 
+    fontsize=50
 )
 disp.fill(scr)
 t1 = disp.show()
@@ -105,16 +73,11 @@ t1 = "{:%Y-%m-%d$%H-%M-%S}".format(datetime.now())
 # log.write(["EyeTracker", t1])
 kb.get_key()
 
-# tracker.calibrate
-# tracker.calibrate()
 
 # tracker.sample()
 scr.clear()
-scr.draw_text("The dot should follow your eye movements", fontsize=30)
 disp.fill(scr)
 disp.show()
-# tracker.log("now testing sample function")
-# tracker.status_msg("now testing sample function")
 tracker.start_recording()
 key = None
 while not key == "space":
@@ -122,132 +85,44 @@ while not key == "space":
     key, presstime = kb.get_key(timeout=1)
     # new states
     gazepos = tracker.sample()
+    pupil_size = tracker.pupil_size()
+    
+    # Get latest gaze sample from tracker
+    gaze_sample = copy.copy(tracker.gaze[-1])
+    print('gaze length:', len(tracker.gaze))
+
+    
+    # Calculate distance using both eyes when available
+    distance = []
+    if gaze_sample['right_gaze_origin_validity']:
+                    distance.append(round(gaze_sample['right_gaze_origin_in_user_coordinate_system'][2] / 10, 1))
+
+    if gaze_sample['left_gaze_origin_validity']:
+                    distance.append(round(gaze_sample['left_gaze_origin_in_user_coordinate_system'][2] / 10, 1))
+    
+    distance = tracker._mean(distance)
+    
     # draw to screen
     scr.clear()
-    scr.draw_text("The dot should follow your eye movements", fontsize=30)
+    distance_text = f"Distance: {distance:.1f} cm" if distance else "Distance: Not available"
+    scr.draw_text(f"The dot follows your eyes. Watch your pupil size and distance.\n\nPupil size: {pupil_size:.2f}\n{distance_text}", fontsize=50)
     scr.draw_fixation(
-        fixtype="dot", pos=gazepos, pw=3, diameter=(tracker.pupil_size() * 15)
+        fixtype="dot", 
+        pos=gazepos,
+        pw=3, 
+        diameter=max(5, (pupil_size - 1) * 30)  # Ensure minimum visible size
     )
     disp.fill(scr)
     disp.show()
 tracker.stop_recording()
 scr.clear()
 
-# tracker.drift_correction
-# scr.clear()
-# scr.draw_text("Next is a drift check. Press Space to start!", fontsize=30)
-# disp.fill(scr)
-# disp.show()
-# kb.get_key()
-# tracker.drift_correction()
-
-# # tracker.fix_triggered_drift_correction
-# scr.clear()
-# scr.draw_text("Next is a fixation triggered drift check. Press Space to start!", fontsize=30)
-# disp.fill(scr)
-# disp.show()
-# kb.get_key()
-# tracker.fix_triggered_drift_correction()
-
-# eventslog
-# tracker.log("now testing wait_for_event functions")
-# tracker.status_msg("now testing wait_for_event functions")
-# for i in range(len(eventfuncs)):
-#   scr.clear()
-#   scr.draw_text("Test function: %s(); press Space to start" % str(eventfuncs[i]))
-#   scr.draw_fixation(fixtype='dot', pos=(DISPSIZE[0]*0.75,DISPSIZE[1]*0.75))
-#   disp.fill(scr)
-#   disp.show()
-#   kb.get_key()
-#   eventfuncs[i]()
-#   scr.clear()
-#   scr.draw_text("Function %s works! Press space to test the next" % str(eventfuncs[i]))
-#   disp.fill(scr)
-#   disp.show()
-#   kb.get_key()
-
-
-# # # # #
-# test gaze contingency
-
-# # AOI
-# scr.clear()
-# scr.draw_text("There should be an image in the centre of the screen", pos=(DISPSIZE[0]/2, DISPSIZE[1]/10))
-# scr.draw_image(imagefile) # imginfo: 400x600 px; kitten head position relative to image x=40, y=160, w=130, h=140
-# x = (DISPSIZE[0]/2 - 200) + 40 # centre minus half of the image width, plus kitten head X position in image
-# y = (DISPSIZE[1]/2 - 300) + 160 # centre minus half of the image height, plus kitten head Y position in image
-# aoi = AOI('rectangle',(x,y),(130,140))
-# disp.fill(scr)
-# t1 = disp.show()
-# log.write(["AOI", t1])
-# key = None
-# tracker.start_recording()
-# while key != 'space':
-#   # check for key input
-#   key, presstime = kb.get_key(keylist=['space'],timeout=1)
-#   # get gaze position
-#   gazepos = tracker.sample()
-#   # check if the gaze position is within the aoi
-#   if aoi.contains(gazepos):
-#       # play barking sound if gaze position is on kitten's head
-#       snd.play(repeats=-1)
-#   else:
-#       # do not play sound if gaze is somewhere else
-#       snd.stop()
-# snd.stop()
-# tracker.stop_recording()
-
-# # FRL
-# scr.clear()
-# scr.draw_text("There should be an image in the centre of the screen", pos=(DISPSIZE[0]/2, DISPSIZE[1]/10))
-# scr.draw_image(imagefile)
-# frl = FRL(pos='centre', dist=125, size=200)
-# disp.fill(scr)
-# t1 = disp.show()
-# log.write(["FRL", t1])
-# key = None
-# tracker.start_recording()
-# while key != 'space':
-#   # check for key input
-#   key, presstime = kb.get_key(keylist=['space'],timeout=1)
-#   # get gaze position
-#   gazepos = tracker.sample()
-#   # update FRL
-#   frl.update(disp, scr, gazepos)
-tracker.stop_recording()
 # initialize the current time for the file name
 rec_stopped = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
-# # GazeCursor
-# scr.clear()
-# scr.draw_text("The cursor should follow your gaze")
-# cursor = GazeCursor(ctype='arrow',size=20,colour=(0,0,0), pw=3, fill=True)
-# disp.fill(scr)
-# t1 = disp.show()
-# log.write(["GazeCursor", t1])
-# key = None
-# tracker.start_recording()
-# while key != 'space':
-#   # check for key input
-#   key, presstime = kb.get_key(keylist=['space'],timeout=1)
-#   # get gaze position
-#   gazepos = tracker.sample()
-#   # add new cursor to cleared screen
-#   scr.clear() # remove previous cursor
-#   scr.draw_text("The cursor should follow your gaze")
-#   scr = cursor.update(scr, gazepos) # adds new cursor
-#   # update display
-#   disp.fill(scr)
-#   disp.show()
-# tracker.stop_recording()
-
-
-# # # # #
-# close down
-
 # ending screen
 scr.clear()
-scr.draw_text("That's all folks! Press Space to quit.", fontsize=30)
+scr.draw_text("That's all folks! Press Space to quit.", fontsize=50)
 disp.fill(scr)
 t1 = disp.show()
 t1 = "{:%Y-%m-%d$%H-%M-%S}".format(datetime.now())
