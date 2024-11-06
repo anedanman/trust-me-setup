@@ -510,6 +510,7 @@ def key_change_callback(deck, key, state):
         else:
             # record question
             subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            
             # record answer
             default_answer = 0
             if key == 5:
@@ -574,14 +575,11 @@ def key_change_callback(deck, key, state):
 
     # FIXED_FEEDBACK loop
     else:
-        # record question
-        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
 
-        #invalid click
+        # invalid click
         if key in [0,1,2,3,4,6,7,8]:
             return
 
-        # record answer
         default_answer = 0
         if key == 5:
             default_answer = 0
@@ -601,6 +599,10 @@ def key_change_callback(deck, key, state):
         if CURRENT_Q in [1,6,7]:
             default_answer = default_answer - 3
 
+        # record question
+        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+
+        # record answer
         subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
         
         if CURRENT_Q < 9:
