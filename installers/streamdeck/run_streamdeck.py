@@ -40,6 +40,7 @@ ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 def alarm(deck):
     global FIXED_FEEDBACK
+    global CURRENT_Q
 
     # update icon, not sleeping
     for key in range(deck.key_count()):
@@ -48,10 +49,11 @@ def alarm(deck):
     if not deck.is_open(): return
     
     while FIXED_FEEDBACK:
-        time.sleep(1)
-        deck.set_brightness(0)
-        time.sleep(1)
-        deck.set_brightness(100)
+        if CURRENT_Q == 1:
+            time.sleep(1)
+            deck.set_brightness(0)
+            time.sleep(1)
+            deck.set_brightness(100)
 
     # # finished, back sleep
     # for key in range(deck.key_count()):
