@@ -67,7 +67,9 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
     def captureImages(self, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
-        save_pid(process_type)
+        try:
+            save_pid(process_type)
+        except: pass
         
         self.initCamera(camera_id=self.channel)
         self.configureCamera()
@@ -85,6 +87,8 @@ class RGBCamera(Camera):
         chunk_index = 0
         img_id = 0 
         timestamps = []
+        f = open(f"{self.save_directory}/{name}_timestamps.txt", "w")
+        
         if self.store_video:
             out = cv2.VideoWriter(
                 f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
@@ -114,6 +118,8 @@ class RGBCamera(Camera):
                     formatted_timestamp = formatted_time()
                     timestamps.append((img_id, formatted_timestamp))
 
+                    f.write(f"{img_id},{formatted_timestamp}\n")
+                    
                     if self.store_video:
                         out.write(frame)
                     else:
@@ -135,10 +141,7 @@ class RGBCamera(Camera):
             print("KeyboardInterrupt [camera.py]")
 
         finally:
-            f = open(f"{self.save_directory}/{name}_timestamps.txt", "w"):
-            for img_id, timestamp in timestamps:
-                f.write(f"{img_id},{timestamp}\n")
-            
+            f.close()
             self.cap.release()
             if self.store_video:
                 out.release()
