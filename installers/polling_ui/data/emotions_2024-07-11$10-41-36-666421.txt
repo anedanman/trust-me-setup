@@ -1,1 +1,0 @@
-[('Rate the level of valence you are feeling at this moment.', 1), ('Rate the level of arousal you are feeling at this moment.', 1)]

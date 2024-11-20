@@ -42,16 +42,16 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("-n", "--name", default=uname, type=str)
-parser.add_argument("-d", "--duration", default="-1", type=int)
+parser.add_argument("-d", "--duration", default="28800", type=int)
 
 
 hw_config = None
 
 
 class CaptureData:
-    WARMUP_TIME = 60
+    WARMUP_TIME = 30
 
-    def __init__(self, filename="test", seconds=10, show_rgb=False):
+    def __init__(self, filename="test", seconds=28800, show_rgb=False):
         global hw_config
 
         self.show_rgb = show_rgb
@@ -70,6 +70,7 @@ class CaptureData:
                 self.hw_config["depth"]["resolution_x"],
                 self.hw_config["depth"]["resolution_y"],
             ),
+            chunk_size=self.hw_config["depth"]["chunk_length"],
             save_directory="installers/data_collection/data/realsense",
         )
 
@@ -90,17 +91,17 @@ class CaptureData:
             save_directory="installers/data_collection/data/audio",
         )
 
-        self.rgb = RGBCamera(
-            fps=self.hw_config["rgb"]["fps"],
-            resolution=(
-                self.hw_config["rgb"]["resolution_x"],
-                self.hw_config["rgb"]["resolution_y"],
-            ),
-            channel=self.hw_config["rgb"]["channel"],
-            store_video=True,
-            save_directory="installers/data_collection/data/rgb",
-            chunk_size=self.hw_config["rgb"]["chunk_length"],
-        )
+        # self.rgb = RGBCamera(
+            # fps=self.hw_config["rgb"]["fps"],
+            # resolution=(
+                # self.hw_config["rgb"]["resolution_x"],
+                # self.hw_config["rgb"]["resolution_y"],
+            # ),
+            # channel=self.hw_config["rgb"]["channel"],
+            # store_video=True,
+            # save_directory="installers/data_collection/data/rgb",
+            # chunk_size=self.hw_config["rgb"]["chunk_length"],
+        # )
 
         self.hires = RGBCamera(
             fps=self.hw_config["hires"]["fps"],
@@ -142,11 +143,11 @@ class CaptureData:
         )
 
         #  RGB
-        self.rgb_process = multiprocessing.Process(
-            target=self.rgb.captureImages,
-            args=(name, seconds, self.show_rgb, self.start_event,),
-            kwargs=({"process_type": "streamcam"})
-        )
+        # self.rgb_process = multiprocessing.Process(
+            # target=self.rgb.captureImages,
+            # args=(name, seconds, self.show_rgb, self.start_event,),
+            # kwargs=({"process_type": "streamcam"})
+        # )
 
         self.hires_process = multiprocessing.Process(
             target=self.hires.captureImages,
@@ -161,7 +162,7 @@ class CaptureData:
             self.realsense_process,
             self.audio_process,
             self.hires_process,
-            self.rgb_process,
+            # self.rgb_process,
         ]
 
         try:
