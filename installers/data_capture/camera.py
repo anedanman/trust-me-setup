@@ -83,7 +83,8 @@ class RGBCamera(Camera):
 
         start_time = time.time()
         chunk_index = 0
-        img_id = 0
+        img_id = 0 
+        timestamps = []
         if self.store_video:
             out = cv2.VideoWriter(
                 f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
@@ -108,6 +109,10 @@ class RGBCamera(Camera):
                     if not ret:
                         print("Can't receive frame (stream end?). Exiting ...")
                         break
+                    
+                     # Get the current timestamp
+                    formatted_timestamp = formatted_time()
+                    timestamps.append((img_id, formatted_timestamp))
 
                     if self.store_video:
                         out.write(frame)
@@ -116,7 +121,7 @@ class RGBCamera(Camera):
                             f"{self.save_directory}/{name}_{img_id}_{formatted_time()}.jpg",
                             frame,
                         )
-                        img_id += 1
+                    img_id += 1
 
                     # if show_video:
                         # cv2.imshow("rec", frame)
@@ -130,6 +135,10 @@ class RGBCamera(Camera):
             print("KeyboardInterrupt [camera.py]")
 
         finally:
+            f = open(f"{self.save_directory}/{name}_timestamps.txt", "w"):
+            for img_id, timestamp in timestamps:
+                f.write(f"{img_id},{timestamp}\n")
+            
             self.cap.release()
             if self.store_video:
                 out.release()

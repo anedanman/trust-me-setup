@@ -33,6 +33,7 @@ class Thermal(Camera):
 
     def initCamera(self):
         self.camera = Lepton()
+        # self.camera.set_sampling_frequency(self.fps)
 
     def convertToCelsius(self, img):
         assert type(img) == np.ndarray, "Image must be a numpy array"
@@ -109,7 +110,7 @@ class Thermal(Camera):
                 print("Thermal camera error!", e)
 
         finally:
-            self.saveToDisk(name, video)   # Might cause empty saves but necessary
+            self.saveToDisk(name, video)  # Might cause empty saves but necessary
             print("Done...[thermal.py]")
 
 
