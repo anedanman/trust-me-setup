@@ -4,6 +4,7 @@ from datetime import datetime
 from utils import save_pid
 
 import numpy as np
+import pandas as pd
 import tifffile
 from camera import Camera
 from flirpy.camera.lepton import Lepton
@@ -40,10 +41,10 @@ class Thermal(Camera):
 
         return img / 100 - 273.15
 
-    def saveToDisk(self, name, img):
+    def saveToDisk(self, name, img, start_time):
         if img is not None and len(img) > 0:
             tifffile.imwrite(
-                f"{self.save_directory}/{name}_{formatted_time()}.tiff",
+                f"{self.save_directory}/{name}_{start_time}.tiff",
                 img,
                 photometric="minisblack",
                 bigtiff=True,
@@ -51,6 +52,12 @@ class Thermal(Camera):
             )
         else:
             print("No image, skipping [thermal.py]")
+    
+    def saveFrameTime(self, name, time_dataframe, start_time):
+        if time_dataframe is not None and len(time_dataframe) > 0:
+            time_dataframe.to_csv(
+                f"{self.save_directory}/{name}_{start_time}.csv"
+            )
 
     def captureImages(
         self,
@@ -77,9 +84,11 @@ class Thermal(Camera):
 
         start_time = time.time()
 
-        # Array for saving frames
+        # Array for saving frames & frame times
         video = []
+        frame_times = []
         current_time = start_time
+        format_time = formatted_time()
 
         try:
             while time.time() - start_time < seconds:
@@ -95,12 +104,18 @@ class Thermal(Camera):
                 # Save frame to array
                 video.append(frame)
 
-                # Write to disk
-                if len(video) > 0 and time.time() - current_time >= self.chunk_size:
-                    self.saveToDisk(name, video)
+                # Get frame time & save it to array
+                frame_time = time.time()
+                frame_times.append(frame_time)
 
-                    # Empty video array
+                # Write to disk & save time .csv
+                if len(video) > 0 and time.time() - current_time >= self.chunk_size:
+                    self.saveToDisk(name, video, start_time = format_time)
+                    self.saveFrameTime(name, pd.DataFrame(frame_times), start_time = format_time)
+
+                    # Empty video & time array
                     video = []
+                    frame_times = []
                     current_time = time.time()
 
         except Exception as e:
@@ -110,7 +125,8 @@ class Thermal(Camera):
                 print("Thermal camera error!", e)
 
         finally:
-            self.saveToDisk(name, video)  # Might cause empty saves but necessary
+            self.saveToDisk(name, video, start_time = format_time)  # Might cause empty saves but necessary
+            self.saveFrameTime(name, pd.DataFrame(frame_times), start_time = format_time)
             print("Done...[thermal.py]")
 
 
