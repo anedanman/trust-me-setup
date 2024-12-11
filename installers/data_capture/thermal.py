@@ -117,6 +117,7 @@ class Thermal(Camera):
                     video = []
                     frame_times = []
                     current_time = time.time()
+                    format_time = formatted_time()
 
         except Exception as e:
             if isinstance(e, KeyboardInterrupt):
@@ -125,6 +126,7 @@ class Thermal(Camera):
                 print("Thermal camera error!", e)
 
         finally:
+            format_time = formatted_time()
             self.saveToDisk(name, video, start_time = format_time)  # Might cause empty saves but necessary
             self.saveFrameTime(name, pd.DataFrame(frame_times), start_time = format_time)
             print("Done...[thermal.py]")
