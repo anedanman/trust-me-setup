@@ -541,7 +541,7 @@ def find_top_n_peaks(df, n, delta):
     return selected_peaks
 
 def highlights(video_path='./installers/data_collection/data/hires', blends_path='./blendshapes', highlights_path='./highlights', 
-              date='2024-08-27', delta=900, n_highlights=5, screen_recording_path=None):
+              date='2024-08-27', delta=1800, n_highlights=5, screen_recording_path=None):
     import re
     from pathlib import Path
     from datetime import datetime, timedelta
