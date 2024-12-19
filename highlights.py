@@ -706,9 +706,9 @@ def main():
     # Process blendshapes
     if not args.skip_blendshapes:
         print(f"Processing blendshapes for date: {args.date}")
-        # blendshapes_group(video_path=args.video_path, 
-        #                  blends_path=args.blends_path,
-        #                  date=args.date)
+        blendshapes_group(video_path=args.video_path, 
+                         blends_path=args.blends_path,
+                         date=args.date)
         fps = merge_blendshapes(blends_path=args.blends_path,
                          date=args.date)
     
