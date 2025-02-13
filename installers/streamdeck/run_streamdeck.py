@@ -20,6 +20,7 @@ VERBOSE = False # Debug
 DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
 CURRENT_Q = 1 # current question
 FIXED_FEEDBACK = False
+SLEEP_QUESTION = True
 FREE_FEEDBACK = False
 USERNAME = 'user1'
 
@@ -61,6 +62,30 @@ def alarm(deck):
 
     return
 
+def alarm_self_all_updates(deck):
+    global FIXED_FEEDBACK
+    global CURRENT_Q
+
+    FIXED_FEEDBACK = True
+    # update icon, not sleeping
+    for key in range(deck.key_count()):
+        update_key_image(deck, key, False)
+
+    if not deck.is_open(): return
+    
+    # while FIXED_FEEDBACK:
+    #     if CURRENT_Q == 1:
+    #         time.sleep(1)
+    #         deck.set_brightness(0)
+    #         time.sleep(1)
+    #         deck.set_brightness(100)
+
+    # # finished, back sleep
+    # for key in range(deck.key_count()):
+    #     update_key_image(deck, key, False)
+
+    return
+
 def timer_function(deck):
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
@@ -76,7 +101,7 @@ def timer_function(deck):
             time.sleep(1)
 
         # time up, but wait for FREE_FEEDBACK if is
-        while FREE_FEEDBACK:
+        while FREE_FEEDBACK or FIXED_FEEDBACK:
             time.sleep(1)
 
         FIXED_FEEDBACK = True
@@ -104,9 +129,44 @@ def get_key_style(deck, key, state): # device, int, False
     global FIXED_FEEDBACK
     global FREE_FEEDBACK   
     global CURRENT_Q
+    global SLEEP_QUESTION
+
+    if SLEEP_QUESTION:
+        if key == 0:
+            icon = "qsleep/1.png"
+        elif key == 1:
+            icon = "qsleep/2.png"
+        elif key == 2:
+            icon = "qsleep/3.png"
+        elif key == 3:
+            icon = "qsleep/4.png"
+        elif key == 4:
+            icon = "qsleep/5.png"
+        elif key == 6:
+            icon = "qsleep/6.png"
+        elif key == 8:
+            icon = "qsleep/back.png"
+        elif key == 5:
+            icon = "numero/m3.png"
+        elif key == 10:
+            icon = "numero/m2.png"
+        elif key == 11:
+            icon = "numero/m1.png"
+        elif key == 12:
+            icon = "numero/0.png"
+        elif key == 13:
+            icon = "numero/1.png"
+        elif key == 14:
+            icon = "numero/2.png"
+        elif key == 9:
+            icon = "numero/3.png"
+        elif key == 7:
+            icon = "static/black.png"
+
+
 
     # sleeping render
-    if not FIXED_FEEDBACK and not FREE_FEEDBACK: 
+    elif not FIXED_FEEDBACK and not FREE_FEEDBACK: 
         if key == 0:
             name = "T"
             icon = "T.png"
@@ -488,13 +548,55 @@ def key_change_callback(deck, key, state):
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
     global CURRENT_Q
+    global SLEEP_QUESTION
+
 
     # one press makes two callbacks (state: True - False)
     # pressed reactions only
     if not state: return
 
+    # print("flag1")
+    # print(FIXED_FEEDBACK)
+    # print(FREE_FEEDBACK)
+
+    if SLEEP_QUESTION:
+        # misclick
+        if key in [0, 1, 2, 3, 4, 6, 7, 8]:
+            return
+        
+        # feedbacked click
+        else:
+            # record question
+            subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: SLEEP\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            # record answer
+            default_answer = 0
+            if key == 5:
+                default_answer = 0
+            elif key == 10:
+                default_answer = 1
+            elif key == 11:
+                default_answer = 2
+            elif key == 12:
+                default_answer = 3
+            elif key == 13:
+                default_answer = 4
+            elif key == 14:
+                default_answer = 5
+            else:
+                default_answer = 6
+
+            default_answer = default_answer - 3
+
+            subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            
+            SLEEP_QUESTION = False
+
+            return
+
+
+
     # receiving feedback from FREE_FEEDBACK
-    if FREE_FEEDBACK:
+    elif FREE_FEEDBACK:
         # misclick
         if key in [0, 1, 2, 3, 4, 6, 7]:
             return
@@ -512,7 +614,6 @@ def key_change_callback(deck, key, state):
         else:
             # record question
             subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
-            
             # record answer
             default_answer = 0
             if key == 5:
@@ -547,7 +648,18 @@ def key_change_callback(deck, key, state):
     elif not FIXED_FEEDBACK:
 
         # misclick
-        if key in [0, 1, 2, 3, 4, 9]: return
+        if key in [0, 1, 3, 4]: return
+
+        # game mode, clicking U
+        if key == 2:
+            subprocess.run(f"/bin/bash -c 'echo \"$(date) GAME STARTS\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            return
+
+        # self all report
+        if key == 9:
+            # print("flag: open 9")
+            alarm_self_all_updates(deck)
+            return
         
         # FREE_FEEDBACK
         FREE_FEEDBACK = True
@@ -577,11 +689,15 @@ def key_change_callback(deck, key, state):
 
     # FIXED_FEEDBACK loop
     else:
+        # print("flag3")
+        # record question
+        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
 
-        # invalid click
+        #invalid click
         if key in [0,1,2,3,4,6,7,8]:
             return
 
+        # record answer
         default_answer = 0
         if key == 5:
             default_answer = 0
@@ -601,10 +717,6 @@ def key_change_callback(deck, key, state):
         if CURRENT_Q in [1,6,7]:
             default_answer = default_answer - 3
 
-        # record question
-        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
-
-        # record answer
         subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
         
         if CURRENT_Q < 9:
@@ -624,6 +736,7 @@ def key_change_callback(deck, key, state):
 if __name__ == "__main__":
     streamdecks = DeviceManager().enumerate()
 
+
     if len(streamdecks) and VERBOSE:
         print("Streamdeck Found.")
 
@@ -633,10 +746,13 @@ if __name__ == "__main__":
         deck.reset()
         deck.set_brightness(90)
 
+        
+
         timer_thread = threading.Thread(target=timer_function, args=(deck,))
         timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
         timer_thread.start()
 
+        SLEEP_QUESTION = False
         # Set initial key images.
         for key in range(deck.key_count()):
             update_key_image(deck, key, False)
@@ -645,9 +761,21 @@ if __name__ == "__main__":
         # time.sleep(1)
         # deck.close()
 
+        SLEEP_QUESTION = True
 
         # Register callback function for when a key state changes.
         while deck.is_open():
+            # print("flag:begin")
+            # Sleep question first
+            while SLEEP_QUESTION:
+                for key in range(deck.key_count()):
+                    update_key_image(deck, key, False)
+                deck.set_key_callback(key_change_callback)
+                for key in range(deck.key_count()):
+                    update_key_image(deck, key, False)
+            # print("flag:end")
+
+
             deck.set_key_callback(key_change_callback)
 
 
