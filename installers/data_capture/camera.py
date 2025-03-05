@@ -87,7 +87,7 @@ class RGBCamera(Camera):
         chunk_index = 0
         img_id = 0 
         timestamps = []
-        f = open(f"{self.save_directory}/{name}_timestamps.txt", "w")
+        f = open(f"{self.save_directory}/{name}_timestamps_{formatted_time()}.txt", "w")
         f.write("frame_number, timestamp\n")
         
         if self.store_video:
