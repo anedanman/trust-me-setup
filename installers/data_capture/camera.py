@@ -87,7 +87,8 @@ class RGBCamera(Camera):
         chunk_index = 0
         img_id = 0 
         timestamps = []
-        f = open(f"{self.save_directory}/{name}_timestamps_{formatted_time()}.txt", "w")
+        time_for_timestamps = formatted_time()
+        f = open(f"{self.save_directory}/{name}_timestamps_{time_for_timestamps}.txt", "w")
         f.write("frame_number, timestamp\n")
         
         if self.store_video:
@@ -101,12 +102,16 @@ class RGBCamera(Camera):
             while time.time() - start_time < seconds:
                 chunk_start_time = time.time()
                 if self.store_video or out == None:
+                    fmtd_time = formatted_time()
                     out = cv2.VideoWriter(
-                        f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
+                        f"{self.save_directory}/{name}_chunk{chunk_index}_{fmtd_time}.mp4",
                         self.fourcc,
                         self.fps,
                         self.resolution,
                     )
+                    
+                    f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
+                    f.write("frame_number, timestamp\n")
                     chunk_index += 1
 
                 while time.time() - chunk_start_time < self.chunk_size:
