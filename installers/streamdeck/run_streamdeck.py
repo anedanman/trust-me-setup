@@ -15,6 +15,9 @@ import threading
 import time
 import random
 import subprocess
+import sys
+import datetime
+import getpass
 
 VERBOSE = False # Debug
 DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
@@ -22,15 +25,30 @@ CURRENT_Q = 1 # current question
 FIXED_FEEDBACK = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
-USERNAME = 'user1'
 
-# define subprocess
-# level1 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 1.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# level2 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 2.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# level3 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 3.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# level4 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 4.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
-# level5 = f"/bin/bash -c 'echo \"$(date) Feedback Level: 5.\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'"
+# Get username from command line argument or file or default
+if len(sys.argv) > 1:
+    USERNAME = sys.argv[1]
+else:
+    try:
+        with open(os.path.expanduser("~/trust-me-setup/tmp/current_username"), "r") as f:
+            USERNAME = f.read().strip()
+    except:
+        USERNAME = "user1"
 
+# Get base path from second argument or use default
+BASE_PATH = sys.argv[2] if len(sys.argv) > 2 else os.path.expanduser("~/trust-me-setup")
+
+print(f"StreamDeck using username: {USERNAME}")
+print(f"Using base path: {BASE_PATH}")
+
+# Create data directory if it doesn't exist
+DATA_DIR = os.path.join(BASE_PATH, "installers/data_collection/data/streamdeck")
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Generate log filename once (instead of in each subprocess call)
+CURRENT_DATE = datetime.datetime.now().strftime("%Y-%m-%d")
+LOG_FILE = os.path.join(DATA_DIR, f"{USERNAME}_{CURRENT_DATE}")
 
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
@@ -549,6 +567,8 @@ def key_change_callback(deck, key, state):
     global FREE_FEEDBACK
     global CURRENT_Q
     global SLEEP_QUESTION
+    global USERNAME
+    global LOG_FILE
 
 
     # one press makes two callbacks (state: True - False)
@@ -567,7 +587,10 @@ def key_change_callback(deck, key, state):
         # feedbacked click
         else:
             # record question
-            subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: SLEEP\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} CURRENT QUESTION: SLEEP\n")
+            
             # record answer
             default_answer = 0
             if key == 5:
@@ -587,7 +610,9 @@ def key_change_callback(deck, key, state):
 
             default_answer = default_answer - 3
 
-            subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} FEEDBACK LEVEL: {default_answer}\n")
             
             SLEEP_QUESTION = False
 
@@ -613,7 +638,10 @@ def key_change_callback(deck, key, state):
         # feedbacked click
         else:
             # record question
-            subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} CURRENT QUESTION: {CURRENT_Q}\n")
+            
             # record answer
             default_answer = 0
             if key == 5:
@@ -634,7 +662,9 @@ def key_change_callback(deck, key, state):
             if CURRENT_Q in [1,6,7]:
                 default_answer = default_answer - 3
 
-            subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} FEEDBACK LEVEL: {default_answer}\n")
             
             FREE_FEEDBACK = False
             CURRENT_Q = 1
@@ -652,7 +682,9 @@ def key_change_callback(deck, key, state):
 
         # game mode, clicking U
         if key == 2:
-            subprocess.run(f"/bin/bash -c 'echo \"$(date) GAME STARTS\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} GAME STARTS\n")
             return
 
         # self all report
@@ -691,7 +723,9 @@ def key_change_callback(deck, key, state):
     else:
         # print("flag3")
         # record question
-        subprocess.run(f"/bin/bash -c 'echo \"$(date) CURRENT QUESTION: {CURRENT_Q}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(LOG_FILE, "a") as f:
+            f.write(f"{timestamp} CURRENT QUESTION: {CURRENT_Q}\n")
 
         #invalid click
         if key in [0,1,2,3,4,6,7,8]:
@@ -717,7 +751,9 @@ def key_change_callback(deck, key, state):
         if CURRENT_Q in [1,6,7]:
             default_answer = default_answer - 3
 
-        subprocess.run(f"/bin/bash -c 'echo \"$(date) FEEDBACK LEVEL: {default_answer}\" >> /home/$(whoami)/trust-me-setup/installers/streamdeck/Recording/{USERNAME}_$(date +\"%Y-%m-%d\")'", shell=True, check=True)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(LOG_FILE, "a") as f:
+            f.write(f"{timestamp} FEEDBACK LEVEL: {default_answer}\n")
         
         if CURRENT_Q < 9:
             CURRENT_Q = CURRENT_Q + 1

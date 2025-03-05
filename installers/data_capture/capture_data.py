@@ -32,7 +32,12 @@ from thermal import Thermal
 # which causes an error since objects like VideoCapture() are unpickable.
 # --------------------------------------------------------------------------------------
 
-uname = getpass.getuser()
+# Get username from file if not specified
+try:
+    with open("/home/$(whoami)/trust-me-setup/tmp/current_username", "r") as f:
+        default_username = f.read().strip()
+except:
+    default_username = "user1"
 
 # Add command line arguments
 parser = argparse.ArgumentParser(
@@ -41,7 +46,7 @@ parser = argparse.ArgumentParser(
     epilog="Any bugs in the code are property of JSI",
 )
 
-parser.add_argument("-n", "--name", default=uname, type=str)
+parser.add_argument("-n", "--name", default=default_username, type=str)
 parser.add_argument("-d", "--duration", default="28800", type=int)
 
 

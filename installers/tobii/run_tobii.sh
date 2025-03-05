@@ -1,8 +1,13 @@
 #!/bin/bash
 
-PID_DIR="/home/dis/trust-me-setup/tmp/pids/tobiish"
+# Define base path
+BASE_PATH="/home/$(whoami)/trust-me-setup"
+PID_DIR="$BASE_PATH/tmp/pids/tobiish"
 echo $$ > "$PID_DIR"
 
-cd /home/$(whoami)/trust-me-setup/installers/tobii
-/home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py
+# Get username from parameter or file
+USERNAME=${1:-$(cat "$BASE_PATH/tmp/current_username" 2>/dev/null || echo "user1")}
+
+cd "$BASE_PATH/installers/tobii"
+/home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py "$USERNAME" "$BASE_PATH"
 

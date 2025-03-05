@@ -1,8 +1,9 @@
 #!/bin/bash
 echo "Killing PIDs"
 
-# Correct the home directory expansion
-PREFIX="/home/dis/trust-me-setup/tmp"
+# Use $(whoami) to get the current username dynamically
+PREFIX="/home/$(whoami)/trust-me-setup/tmp"
+echo "Using prefix path: $PREFIX"
 
 # List of PID files
 filenames=("pids/audio" "pids/brio" "pids/depth" "pids/thermal" "pids/tobiish" "pids/tobii" "pids/capture_data.pid")
