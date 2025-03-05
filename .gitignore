@@ -170,3 +170,7 @@ installers/data_collection/**
 tmp/startup_script.pid
 tmp/log.txt
 installers/streamdeck/Recording/**
+highlights/**
+blendshapes/**
+tmp/pids/**
+tmp/current_username
