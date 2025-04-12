@@ -26,6 +26,18 @@ FIXED_FEEDBACK = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
 
+# TODO test
+def increase_priority():
+    try:
+        old_nice = os.nice(0)
+        os.nice(-10)
+        new_nice = os.nice(0)
+        print(f"Niceness changed from {old_nice} to {new_nice} (higher priority).")
+    except PermissionError:
+        print("Permission denied: run this script with sudo to set a higher priority.")
+    except Exception as e:
+        print(f"Error while changing niceness: {e}")
+
 # Get username from command line argument or file or default
 if len(sys.argv) > 1:
     USERNAME = sys.argv[1]
@@ -770,6 +782,10 @@ def key_change_callback(deck, key, state):
 
 
 if __name__ == "__main__":
+
+    # TODO test
+    increase_priority()
+    
     streamdecks = DeviceManager().enumerate()
 
 
