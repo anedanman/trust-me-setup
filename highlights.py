@@ -403,7 +403,7 @@ def merge_blendshapes(blends_path='./blendshapes', date='2024-08-27'):
     return fps
 
 def eyetracker2blendshapes(eyetracker_path='./installers/tobii/recordings', blends_path='./blendshapes', date='2024-08-27',
-                           fps=9.1):
+                           fps=9.1, eye_tracking_weight=0.5, blendshape_weight=0.5):
     """
     Match and merge eyetracking data with blendshapes data.
     
@@ -411,6 +411,9 @@ def eyetracker2blendshapes(eyetracker_path='./installers/tobii/recordings', blen
         eyetracker_path: Path to directory containing eyetracking TSV files
         blends_path: Path to directory containing merged blendshape CSV files
         date: Date string to filter files (format: YYYY-MM-DD)
+        fps: Frames per second for video processing
+        eye_tracking_weight: Weight for the eye tracking component of the interest score
+        blendshape_weight: Weight for the blendshape component of the interest score
     """
     import re
     from datetime import datetime, timedelta
@@ -487,7 +490,7 @@ def eyetracker2blendshapes(eyetracker_path='./installers/tobii/recordings', blen
         
         # Properly copy over chunk and preds from blend_df to eye_df
         eye_df['chunk'] = blend_df['chunk'].values  # Use .values to ensure direct assignment
-        eye_df['interest_score'] = 0.5 * eye_df['interest_score'] + 0.5 * blend_df['preds'].values
+        eye_df['interest_score'] = eye_tracking_weight * eye_df['interest_score'] + blendshape_weight * blend_df['preds'].values
         
         # Save merged result with nickname
         output_name = f"aligned_{os.path.basename(blend_file)}"
@@ -540,7 +543,7 @@ def find_top_n_peaks(df, n, delta):
     
     return selected_peaks
 
-def highlights(video_path='./installers/data_collection/data/hires', blends_path='./blendshapes', highlights_path='./highlights', 
+def highlights(video_path='./installers/data_collection/data/hires', blends_path='./installers/data_collection/data/blendshapes', highlights_path='./highlights', 
               date='2024-08-27', delta=1800, n_highlights=5, screen_recording_path=None):
     import re
     from pathlib import Path
@@ -700,6 +703,10 @@ def main():
                        help='Skip blendshapes processing')
     parser.add_argument('--skip-matching', action='store_true',
                        help='Skip matching processing')
+    parser.add_argument('--eye_tracking_weight', type=float, default=0.5,
+                       help='Weight for the eye tracking component of the interest score')
+    parser.add_argument('--blendshape_weight', type=float, default=0.5,
+                       help='Weight for the blendshape component of the interest score')
     
     args = parser.parse_args()
     fps = 9.1
@@ -717,7 +724,9 @@ def main():
         print(f"Processing matching data for date: {args.date}")
         eyetracker2blendshapes(blends_path=args.blends_path,
                               date=args.date,
-                              fps=fps)
+                              fps=fps,
+                              eye_tracking_weight=args.eye_tracking_weight,
+                              blendshape_weight=args.blendshape_weight)
     
     # Generate highlights
     print(f"Generating highlights for date: {args.date}")
