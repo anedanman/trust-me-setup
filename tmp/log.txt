@@ -788,3 +788,122 @@ KeyboardInterrupt
 python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
 /home/dis/trust-me-setup/installers/tobii/run_tobii.sh: line 7:  2746 Aborted                 /home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py
 Done
+pet 18 apr 2025 08:16:01 CEST
+conda 24.4.0
+Using username: dis
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Run capture_data.py -h for usage tips.
+Initialized mic with sampling rate 16000
+RGBCamera set with FPS: 10.0 and resolution: (3840, 2160)!
+StreamDeck using username: dis
+Using base path: /home/dis/trust-me-setup
+Permission denied: run this script with sudo to set a higher priority.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 798, in <module>
+    deck.reset()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeckOriginalV2.py", line 94, in reset
+    self.device.write_feature(payload)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 399, in write_feature
+    return self.hidapi.send_feature_report(self.device_handle, payload)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 259, in send_feature_report
+    raise TransportError("Failed to write feature report (%d)" % result)
+StreamDeck.Transport.Transport.TransportError: Failed to write feature report (-1)
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Starting capture...
+Recording audio... Press Ctrl+C to stop.
+Using BRIO Mic
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23749 Killed                  python "$RGB_PATH" -n "$USERNAME"
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23750 Killed                  "$TOBII_PATH" "$USERNAME" "$BASE_PATH"
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23751 Segmentation fault      (core dumped) python "$STREAMDECK_PATH" "$USERNAME" "$BASE_PATH"
+Done
+python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.

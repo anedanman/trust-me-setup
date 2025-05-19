@@ -4,7 +4,7 @@ from datetime import datetime
 from abc import ABC
 from utils import save_pid
 import cv2
-
+import multiprocessing
 
 def formatted_time():
     return "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
@@ -66,7 +66,7 @@ class RGBCamera(Camera):
 
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
-    def captureImages(self, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
+    def captureImages(self, termFlag, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
         try:
             save_pid(process_type)
         except: pass
@@ -99,7 +99,7 @@ class RGBCamera(Camera):
                 self.resolution,
             )
         try:
-            while time.time() - start_time < seconds:
+            while time.time() - start_time < seconds and termFlag.value != 1:
                 chunk_start_time = time.time()
                 if self.store_video or out == None:
                     fmtd_time = formatted_time()
@@ -114,12 +114,12 @@ class RGBCamera(Camera):
                     f.write("frame_number, timestamp\n")
                     chunk_index += 1
 
-                while time.time() - chunk_start_time < self.chunk_size:
+                while time.time() - chunk_start_time < self.chunk_size and termFlag.value != 1:
                     ret, frame = self.cap.read()
                     if not ret:
                         print("Can't receive frame (stream end?). Exiting ...")
                         break
-                    
+                    # print("Curval: ", termFlag.value)
                      # Get the current timestamp
                     formatted_timestamp = formatted_time()
                     timestamps.append((img_id, formatted_timestamp))
@@ -139,10 +139,12 @@ class RGBCamera(Camera):
                         # cv2.imshow("rec", frame)
                         # if cv2.waitKey(1) == ord("q"):
                             # break
-
                 if self.store_video:
                     out.release()
-
+                print("Before exiting:", termFlag.value)
+            if(termFlag.value == 1):
+                print("Termination flag detected. Video recording has been forced to end.")
+                
         except KeyboardInterrupt:
             print("KeyboardInterrupt [camera.py]")
 
@@ -155,8 +157,7 @@ class RGBCamera(Camera):
 
             if show_video:
                 cv2.destroyAllWindows()
-
-
+                
 if __name__ == "__main__":
     start = time.time()
     camera = RGBCamera(

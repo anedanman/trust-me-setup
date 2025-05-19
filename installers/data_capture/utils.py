@@ -15,7 +15,10 @@ def decode_h5(file):
 
         return arr
 
-
+# Check whether keepalive exists or not
+def ka_exists():
+    return os.path.exists("tmp/keepalive.td")
+    
 if __name__ == "__main__":
     for f in os.listdir("."):
 
@@ -29,3 +32,4 @@ if __name__ == "__main__":
         plt.imshow(arr)
 
         plt.show()
+        

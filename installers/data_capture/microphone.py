@@ -1,5 +1,6 @@
 import os
 import time as pytime
+import multiprocessing
 from datetime import datetime
 
 import numpy as np
@@ -50,7 +51,7 @@ class Mic:
         # return sd.default.device
         
 
-    def record(self, name, duration, event):
+    def record(self, termFlag, name, duration, event):
 
         save_pid("audio")
         
@@ -78,11 +79,14 @@ class Mic:
             callback=self.callback,
         ):
             try:
-                while self.is_recording and pytime.time() - start_time < duration:
+                while self.is_recording and pytime.time() - start_time < duration and termFlag.value != 1:
                     if pytime.time() - start_time > self.duration:
                         break
-
+                    
                     pytime.sleep(1)
+                if(termFlag.value == 1):
+                    print("Termination flag detected. Audio recording has been forced to end.")
+                
             except KeyboardInterrupt:
                 print("Recording stopped by user.")
             finally:

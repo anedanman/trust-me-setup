@@ -5,14 +5,12 @@ import time
 import getpass
 import os
 from utils import save_pid 
+from utils import ka_exists
 import subprocess
 
 # If running capture_data.py (this file)
 from camera import RGBCamera
 from microphone import Mic
-from realsense import Realsense
-from thermal import Thermal
-
 # For running from main.py
 # from capture_data.camera import Camera
 # from capture_data.realsense import Realsense
@@ -54,7 +52,7 @@ hw_config = None
 
 
 class CaptureData:
-    WARMUP_TIME = 30
+    WARMUP_TIME = 5
 
     def __init__(self, filename="test", seconds=28800, show_rgb=False):
         global hw_config
@@ -62,33 +60,14 @@ class CaptureData:
         self.show_rgb = show_rgb
         self.hw_config = hw_config
 
+        # This flag is used to announce to the inner threads that they should terminate
+        self.termFlag = multiprocessing.Value('i')
+        self.termFlag.value = 0
         self.init_objects()
         self.config(name=filename, seconds=seconds)
 
     def init_objects(self):
         """Creates objects with properties specified in the hardware_config.json"""
-
-
-        self.realsense = Realsense(
-            fps=self.hw_config["depth"]["fps"],
-            resolution=(
-                self.hw_config["depth"]["resolution_x"],
-                self.hw_config["depth"]["resolution_y"],
-            ),
-            chunk_size=self.hw_config["depth"]["chunk_length"],
-            save_directory="installers/data_collection/data/realsense",
-        )
-
-        self.thermal = Thermal(
-            fps=self.hw_config["thermal"]["fps"],
-            resolution=(
-                self.hw_config["thermal"]["resolution_x"],
-                self.hw_config["thermal"]["resolution_y"],
-            ),
-            save_directory="installers/data_collection/data/thermal",
-            chunk_size=self.hw_config["thermal"]["chunk_length"],
-        )
-
         self.audio = Mic(
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
@@ -134,40 +113,33 @@ class CaptureData:
 
         
         self.audio_process = multiprocessing.Process(
-            target=self.audio.record, args=(name, seconds, self.start_event)
+            target=self.audio.record, args=(self.termFlag, name, seconds, self.start_event)
         )
-
-        self.realsense_process = multiprocessing.Process(
-            target=self.realsense.captureImages,
-            args=(name, seconds, self.start_event),
-        )
-
-        self.thermal_process = multiprocessing.Process(
-            target=self.thermal.captureImages,
-            args=(name, seconds, True, self.start_event),
-        )
-
-        #  RGB
-        # self.rgb_process = multiprocessing.Process(
-            # target=self.rgb.captureImages,
-            # args=(name, seconds, self.show_rgb, self.start_event,),
-            # kwargs=({"process_type": "streamcam"})
-        # )
-
+        
         self.hires_process = multiprocessing.Process(
             target=self.hires.captureImages,
-            args=(name, seconds, self.show_rgb, self.start_event,),
+            args=(self.termFlag, name, seconds, self.show_rgb, self.start_event),
             kwargs=({"process_type": "brio"})
         )
 
-        
-    def capture(self):
+    def terminate(self):
         process_list = [
-            self.thermal_process,
-            self.realsense_process,
             self.audio_process,
             self.hires_process,
-            # self.rgb_process,
+        ]
+        if not ka_exists():
+            self.termFlag.value = 1 # Set the flag to 1 (= termination)
+            print("CaptureData: Gracefully terminating 'audio' and 'hires' processes.")
+            return True
+        return False
+            
+        
+
+    def capture(self):
+
+        process_list = [
+            self.audio_process,
+            self.hires_process,
         ]
 
         try:
@@ -179,16 +151,18 @@ class CaptureData:
             print("Starting capture...")
 
             self.start_event.set()
-
+            
         except Exception as e:
             if isinstance(e, KeyboardInterrupt):
                 print(
                     "Keyboard Interrupt detected, stopping recording...[capture_data.py]"
                 )
-
+		
             else:
                 print("An error occured:", e)
-
+                
+        finally:
+	    	        
         # finally:
             # for process in process_list:
                 # process.join()
@@ -203,7 +177,13 @@ class CaptureData:
             # time.sleep(3)
 
             # print("All processes finished. Recording stopped and saved")
-            exit()
+            while True:
+                if capture.terminate():
+                    time.sleep(0.2)
+                    break
+                else:
+                    print("Running!")
+                time.sleep(0.5)
 
 if __name__ == "__main__":
     print("Run capture_data.py -h for usage tips.")
@@ -211,7 +191,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     save_pid("capture_data.pid")
-
+    
     with open("installers/data_capture/hardware_config.json", "r") as fp:
         hw_config = json.load(fp)
 
