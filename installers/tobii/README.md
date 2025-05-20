@@ -2,6 +2,8 @@
 
 ## New Mini-PC Setup
 
+### 0. Create tobii env using environment.yml in the root directory
+
 ### 1. Download and Install Tobii Pro Spark Driver
 
 First, manually download the Tobii Pro Spark driver from the following link:
