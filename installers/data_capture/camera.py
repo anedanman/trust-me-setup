@@ -88,32 +88,35 @@ class RGBCamera(Camera):
         img_id = 0 
         timestamps = []
         time_for_timestamps = formatted_time()
-        f = open(f"{self.save_directory}/{name}_timestamps_{time_for_timestamps}.txt", "w")
-        f.write("frame_number, timestamp\n")
+        released = False
         
-        if self.store_video:
-            out = cv2.VideoWriter(
-                f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
-                self.fourcc,
-                self.fps,
-                self.resolution,
-            )
+        # NOT NEEDED to open the files here and then again in the loop. Now the files are only opened in the loop.
+        # f = open(f"{self.save_directory}/{name}_timestamps_{time_for_timestamps}.txt", "w")
+        #f.write("frame_number, timestamp\n")
+        
+        # if self.store_video:
+        #     out = cv2.VideoWriter(
+        #         f"{self.save_directory}/{name}_chunk{chunk_index}_{formatted_time()}.mp4",
+        #        self.fourcc,
+        #        self.fps,
+        #        self.resolution,
+       #     )
         try:
             while time.time() - start_time < seconds and termFlag.value != 1:
                 chunk_start_time = time.time()
+                fmtd_time = formatted_time()
                 if self.store_video or out == None:
-                    fmtd_time = formatted_time()
                     out = cv2.VideoWriter(
                         f"{self.save_directory}/{name}_chunk{chunk_index}_{fmtd_time}.mp4",
                         self.fourcc,
                         self.fps,
                         self.resolution,
                     )
-                    
-                    f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
-                    f.write("frame_number, timestamp\n")
+                    released = False
                     chunk_index += 1
-
+                # Open timestamps in any case
+                f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
+                f.write("frame_number, timestamp\n")
                 while time.time() - chunk_start_time < self.chunk_size and termFlag.value != 1:
                     ret, frame = self.cap.read()
                     if not ret:
@@ -130,7 +133,7 @@ class RGBCamera(Camera):
                         out.write(frame)
                     else:
                         cv2.imwrite(
-                            f"{self.save_directory}/{name}_{img_id}_{formatted_time()}.jpg",
+                            f"{self.save_directory}/{name}_{img_id}_{formatted_timestamp}.jpg",
                             frame,
                         )
                     img_id += 1
@@ -141,6 +144,7 @@ class RGBCamera(Camera):
                             # break
                 if self.store_video:
                     out.release()
+                    released = True
                 print("Before exiting:", termFlag.value)
             if(termFlag.value == 1):
                 print("Termination flag detected. Video recording has been forced to end.")
@@ -151,7 +155,7 @@ class RGBCamera(Camera):
         finally:
             f.close()
             self.cap.release()
-            if self.store_video:
+            if not released and self.store_video:
                 out.release()
             print("Stored RGB.")
 
@@ -159,9 +163,9 @@ class RGBCamera(Camera):
                 cv2.destroyAllWindows()
                 
 if __name__ == "__main__":
-    start = time.time()
-    camera = RGBCamera(
-        channel=0, fps=30.0, store_video=True, resolution=(1920, 1080), chunk_size=30
-    )
+     start = time.time()
+     camera = RGBCamera(
+         channel=0, fps=30.0, store_video=True, resolution=(1920, 1080), chunk_size=30
+     )
 
-    camera.captureImages(seconds=-1, show_video=False)
+     camera.captureImages(seconds=-1, show_video=False)

@@ -47,7 +47,6 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-n", "--name", default=default_username, type=str)
 parser.add_argument("-d", "--duration", default="28800", type=int)
 
-
 hw_config = None
 
 
@@ -57,7 +56,7 @@ class CaptureData:
     def __init__(self, filename="test", seconds=28800, show_rgb=False):
         global hw_config
 
-        self.show_rgb = show_rgb
+        self.show_rgb = show_rgby
         self.hw_config = hw_config
 
         # This flag is used to announce to the inner threads that they should terminate
@@ -72,7 +71,7 @@ class CaptureData:
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
             chunk_length=self.hw_config["audio"]["chunk_length"],
-            save_directory="installers/data_collection/data/audio",
+            save_directory=f"installers/data_collection/{default_username}/audio",
         )
 
         # self.rgb = RGBCamera(
@@ -95,7 +94,7 @@ class CaptureData:
             ),
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
-            save_directory="installers/data_collection/data/hires",
+            save_directory=f"installers/data_collection/{default_username}/hires",
             chunk_size=self.hw_config["hires"]["chunk_length"],
         )
 
@@ -181,8 +180,6 @@ class CaptureData:
                 if capture.terminate():
                     time.sleep(0.2)
                     break
-                else:
-                    print("Running!")
                 time.sleep(0.5)
 
 if __name__ == "__main__":
@@ -190,10 +187,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    save_pid("capture_data.pid")
+    # save_pid("capture_data.pid") LEGACY SYSTEM
     
     with open("installers/data_capture/hardware_config.json", "r") as fp:
         hw_config = json.load(fp)
-
+        
+        
+        
+        # print("Username before:", default_username)
+        
+        """ Update the default user var. """
+        default_username = args.name
+        
+        # print("Username after:", default_username)
+        
+        
         capture = CaptureData(seconds=args.duration, filename=args.name)
+        
         capture.capture()

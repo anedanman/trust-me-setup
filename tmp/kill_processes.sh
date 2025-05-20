@@ -25,14 +25,14 @@ for filename in "${filenames[@]}"; do
     # Check if it's a valid PID (numeric)
     if [[ $pid =~ ^[0-9]+$ ]]; then
       echo "Sending SIGKILL to PID $pid (from $filename)"
-      # Delete the keepalive file and the processes will kill themselves
+      # Delete the keepalive file and the processes will kill themselves - let the processes kill themselves
       if [ -f "$KEEPALIVE_PATH" ];
       then
 	      rm -f "$KEEPALIVE_PATH"
 	      echo "The file was deleted!"
       fi
       sleep 0.4
-      # kill -9 "$pid"
+      # kill -9 "$pid" - DO NOT KILL THE PROCESSES - LEGACY CODE
     else
       echo "Invalid PID: $pid in $fullpath"
     fi

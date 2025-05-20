@@ -10,7 +10,7 @@ source "$HOME/miniconda3/etc/profile.d/conda.sh"
 echo $(conda --version)
 
 # Define centralized username for all data collection
-USERNAME=${1:-"dis"}
+USERNAME=${1:-"TEST_SUBJECT"}
 echo "Using username: $USERNAME"
 
 # Define base path
@@ -56,6 +56,14 @@ then
   exit 1
 fi
 
+# Create a file that the python scripts will listen to
+if [ ! -f "$KEEPALIVE_PATH" ];
+then
+    touch "$KEEPALIVE_PATH"
+fi
+sleep 0.1
+# !! ONLY after keepalive start the processes !!
+
 chmod +x "$TOBII_PATH"
 
 python "$BASE_PATH/installers/data_capture/auto_config_hw.py"
@@ -71,12 +79,6 @@ echo "Started recording tobii"
 # Run process in background
 python "$STREAMDECK_PATH" "$USERNAME" "$BASE_PATH" &
 echo "Streamdeck running"
-
-# Create a file that the python scripts will listen to
-if [ ! -f "$KEEPALIVE_PATH" ];
-then
-    touch "$KEEPALIVE_PATH"
-fi
 
 wait
 echo "Done"
