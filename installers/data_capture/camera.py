@@ -67,9 +67,6 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
     def captureImages(self, termFlag, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
-        try:
-            save_pid(process_type)
-        except: pass
         
         self.initCamera(camera_id=self.channel)
         self.configureCamera()
@@ -88,6 +85,8 @@ class RGBCamera(Camera):
         img_id = 0 
         timestamps = []
         time_for_timestamps = formatted_time()
+        
+        """This variable is used to prevent releasing VideoWriter twice"""
         released = False
         
         # NOT NEEDED to open the files here and then again in the loop. Now the files are only opened in the loop.
@@ -112,7 +111,8 @@ class RGBCamera(Camera):
                         self.fps,
                         self.resolution,
                     )
-                    released = False
+                    
+                    released = False # recording started; reset release
                     chunk_index += 1
                 # Open timestamps in any case
                 f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
@@ -122,7 +122,6 @@ class RGBCamera(Camera):
                     if not ret:
                         print("Can't receive frame (stream end?). Exiting ...")
                         break
-                    # print("Curval: ", termFlag.value)
                      # Get the current timestamp
                     formatted_timestamp = formatted_time()
                     timestamps.append((img_id, formatted_timestamp))
@@ -144,7 +143,7 @@ class RGBCamera(Camera):
                             # break
                 if self.store_video:
                     out.release()
-                    released = True
+                    released = True # flag that we already released it here
                 print("Before exiting:", termFlag.value)
             if(termFlag.value == 1):
                 print("Termination flag detected. Video recording has been forced to end.")
@@ -155,7 +154,7 @@ class RGBCamera(Camera):
         finally:
             f.close()
             self.cap.release()
-            if not released and self.store_video:
+            if not released and self.store_video: #release if not already
                 out.release()
             print("Stored RGB.")
 

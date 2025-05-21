@@ -56,7 +56,7 @@ class CaptureData:
     def __init__(self, filename="test", seconds=28800, show_rgb=False):
         global hw_config
 
-        self.show_rgb = show_rgby
+        self.show_rgb = show_rgb
         self.hw_config = hw_config
 
         # This flag is used to announce to the inner threads that they should terminate
