@@ -55,12 +55,12 @@ print(f"StreamDeck using username: {USERNAME}")
 print(f"Using base path: {BASE_PATH}")
 
 # Create data directory if it doesn't exist
-DATA_DIR = os.path.join(BASE_PATH, "installers/data_collection/data/streamdeck")
+DATA_DIR = os.path.join(BASE_PATH, f"installers/data_collection/{USERNAME}/streamdeck")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Generate log filename once (instead of in each subprocess call)
 CURRENT_DATE = datetime.datetime.now().strftime("%Y-%m-%d")
-LOG_FILE = os.path.join(DATA_DIR, f"{USERNAME}_{CURRENT_DATE}")
+LOG_FILE = os.path.join(DATA_DIR, f"{CURRENT_DATE}")
 
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
