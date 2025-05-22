@@ -1,25 +1,26 @@
 #!/bin/bash
-echo "Killing PIDs"
 
-# Use $(whoami) to get the current username dynamically
-PREFIX="/home/$(whoami)/trust-me-setup/tmp"
-echo "Using prefix path: $PREFIX"
+# Get the last logged in user
+LAST_USER=$(last -n 1 | grep -v reboot | head -1 | awk '{print $1}')
 
-# List of PID files
-filenames=("pids/audio" "pids/brio" "pids/tobiish" "pids/tobii" "pids/capture_data.pid")
-
-# Define base path
-BASE_PATH="$HOME/trust-me-setup"
-
-# Paths
-KEEPALIVE_PATH="$BASE_PATH/tmp/keepalive.td"
-
-# Delete the keepalive file and the processes will kill themselves -> let the processes kill themselves
-if [ -f "$KEEPALIVE_PATH" ];
-then
-	rm -f "$KEEPALIVE_PATH"
-	echo "The KEEPALIVE file was deleted! Termination started..."
+# If we found a user
+if [ ! -z "$LAST_USER" ]; then
+    # Define base path
+    BASE_PATH="/home/$LAST_USER/trust-me-setup"
+    echo "Base path: $BASE_PATH" > /tmp/shutdown_log.txt
+    
+    # Paths
+    KEEPALIVE_PATH="$BASE_PATH/tmp/keepalive.td"
+    
+    # Delete the keepalive file
+    if [ -f "$KEEPALIVE_PATH" ]; then
+        echo "Removing keepalive file" >> /tmp/shutdown_log.txt
+        rm -f "$KEEPALIVE_PATH"
+    else
+        echo "Keepalive file not found" >> /tmp/shutdown_log.txt
+    fi
+else
+    echo "No user found" > /tmp/shutdown_log.txt
 fi
-sleep 0.4
 
-# python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
+sleep 0.4
