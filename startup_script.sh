@@ -10,7 +10,7 @@ source "$HOME/miniconda3/etc/profile.d/conda.sh"
 echo $(conda --version)
 
 # Define centralized username for all data collection
-USERNAME=${1:-"TESTING"}
+USERNAME=${1:-"TEST_SUBJECT"}
 echo "Using username: $USERNAME"
 
 # Define base path
@@ -40,7 +40,7 @@ cd "$BASE_PATH"
 TOBII_PATH="$BASE_PATH/installers/tobii/run_tobii.sh";
 RGB_PATH="$BASE_PATH/installers/data_capture/capture_data.py";
 STREAMDECK_PATH="$BASE_PATH/installers/streamdeck/run_streamdeck.py";
-
+KEEPALIVE_PATH="$BASE_PATH/tmp/keepalive.td";
 # Activate environment
 conda activate tobii #recording
 
@@ -55,6 +55,14 @@ then
   echo "Error! RGB script not found at $RGB_PATH"
   exit 1
 fi
+
+# Create a file that the python scripts will listen to
+if [ ! -f "$KEEPALIVE_PATH" ];
+then
+    touch "$KEEPALIVE_PATH"
+fi
+sleep 0.1
+# !! ONLY after keepalive start the processes !!
 
 chmod +x "$TOBII_PATH"
 

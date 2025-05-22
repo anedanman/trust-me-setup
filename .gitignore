@@ -174,3 +174,4 @@ highlights/**
 blendshapes/**
 tmp/pids/**
 tmp/current_username
+tmp/log.txt

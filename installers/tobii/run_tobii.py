@@ -3,7 +3,7 @@ from datetime import datetime
 import time
 import os
 import sys
-
+from utils import ka_exists
 from distance_tobii import DistanceTobii
 
 from pygaze.display import Display
@@ -33,7 +33,7 @@ def main():
     rec_started = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
     # Make sure directory exists
-    data_dir = f"{base_path}/installers/data_collection/data/tobii"
+    data_dir = f"{base_path}/installers/data_collection/{username}/tobii"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
@@ -43,16 +43,20 @@ def main():
     tracker.start_recording()
     print("Recording started")
     try:
-        while True:
+        while ka_exists(base_path):
             time.sleep(1)
-
+            
     except KeyboardInterrupt:
-        print("\nRecording stopped")
-        tracker.stop_recording()
+        print("Keyboard interrupt detected, stopping...")
+    finally:
         rec_stopped = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
         Path(tracker.datafile.name).rename(
             f"{data_dir}/{username}_{rec_started}_{rec_stopped}.tsv"
         )
+        if not ka_exists(base_path):
+            print("Termination flag detected. TOBII recording has been forced to end.")
+        print("\nRecording stopped")
+        tracker.stop_recording()
         disp.close()
 
 if __name__ == "__main__":

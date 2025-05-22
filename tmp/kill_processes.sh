@@ -6,25 +6,20 @@ PREFIX="/home/$(whoami)/trust-me-setup/tmp"
 echo "Using prefix path: $PREFIX"
 
 # List of PID files
-filenames=("pids/audio" "pids/brio" "pids/depth" "pids/thermal" "pids/tobiish" "pids/tobii" "pids/capture_data.pid")
+filenames=("pids/audio" "pids/brio" "pids/tobiish" "pids/tobii" "pids/capture_data.pid")
 
-# Loop over each filename and attempt to kill the process
-for filename in "${filenames[@]}"; do
-  fullpath="$PREFIX/$filename"
+# Define base path
+BASE_PATH="$HOME/trust-me-setup"
 
-  if [[ -f "$fullpath" ]]; then
-    # Read the first line of the file (PID)
-    pid=$(head -n 1 "$fullpath")
+# Paths
+KEEPALIVE_PATH="$BASE_PATH/tmp/keepalive.td"
 
-    # Check if it's a valid PID (numeric)
-    if [[ $pid =~ ^[0-9]+$ ]]; then
-      echo "Sending SIGINT to PID $pid (from $filename)"
-      kill -2 "$pid"
-    else
-      echo "Invalid PID: $pid in $fullpath"
-    fi
-  else
-    echo "File not found: $fullpath"
-  fi
-done
+# Delete the keepalive file and the processes will kill themselves -> let the processes kill themselves
+if [ -f "$KEEPALIVE_PATH" ];
+then
+	rm -f "$KEEPALIVE_PATH"
+	echo "The KEEPALIVE file was deleted! Termination started..."
+fi
+sleep 0.4
 
+# python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.

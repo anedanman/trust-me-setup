@@ -788,3 +788,292 @@ KeyboardInterrupt
 python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
 /home/dis/trust-me-setup/installers/tobii/run_tobii.sh: line 7:  2746 Aborted                 /home/$(whoami)/miniconda3/envs/tobii/bin/python run_tobii.py
 Done
+pet 18 apr 2025 08:16:01 CEST
+conda 24.4.0
+Using username: dis
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Run capture_data.py -h for usage tips.
+Initialized mic with sampling rate 16000
+RGBCamera set with FPS: 10.0 and resolution: (3840, 2160)!
+StreamDeck using username: dis
+Using base path: /home/dis/trust-me-setup
+Permission denied: run this script with sudo to set a higher priority.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 798, in <module>
+    deck.reset()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeckOriginalV2.py", line 94, in reset
+    self.device.write_feature(payload)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 399, in write_feature
+    return self.hidapi.send_feature_report(self.device_handle, payload)
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 259, in send_feature_report
+    raise TransportError("Failed to write feature report (%d)" % result)
+StreamDeck.Transport.Transport.TransportError: Failed to write feature report (-1)
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Starting capture...
+Recording audio... Press Ctrl+C to stop.
+Using BRIO Mic
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+Error: input overflow
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23749 Killed                  python "$RGB_PATH" -n "$USERNAME"
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23750 Killed                  "$TOBII_PATH" "$USERNAME" "$BASE_PATH"
+/home/dis/trust-me-setup/startup_script.sh: line 75: 23751 Segmentation fault      (core dumped) python "$STREAMDECK_PATH" "$USERNAME" "$BASE_PATH"
+Done
+python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.
+tor 20 maj 2025 11:31:01 CEST - start time
+conda 24.4.0
+Using username: dis
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+StreamDeck using username: dis
+Using base path: /home/dis/trust-me-setup
+Permission denied: run this script with sudo to set a higher priority.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 797, in <module>
+    deck.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeck.py", line 214, in open
+    self.device.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 372, in open
+    self.device_handle = self.hidapi.open_device(self.device_info['path'])
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 223, in open_device
+    raise TransportError("Could not open HID device.")
+StreamDeck.Transport.Transport.TransportError: Could not open HID device.
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Run capture_data.py -h for usage tips.
+Initialized mic with sampling rate 16000
+RGBCamera set with FPS: 10.0 and resolution: (3840, 2160)!
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Before exiting: 0
+Before exiting: 0
+Before exiting: 1
+Termination flag detected. Video recording has been forced to end.
+Stored RGB.
+Starting capture...
+CaptureData: Gracefully terminating 'audio' and 'hires' processes.
+pygame 2.5.2 (SDL 2.28.2, Python 3.8.19)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Tobii recording with username: dis
+Using base path: /home/dis/trust-me-setup
+Recording started
+Termination flag detected. TOBII recording has been forced to end.
+
+Recording stopped
+Recording audio... Press Ctrl+C to stop.
+Using BRIO Mic
+Termination flag detected. Audio recording has been forced to end.
+Error: input overflow
+Error: input overflow
+Recording saved to installers/data_collection/data/audio/dis_2025-05-20$12-49-05-666453.wav
+Done
+tor 20 maj 2025 13:00:01 CEST - end time
+tor 20 maj 2025 13:10:01 CEST - reboot time
+tor 20 maj 2025 13:52:49 CEST - start time
+conda 24.4.0
+Using username: S_001
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+StreamDeck using username: S_001
+Using base path: /home/dis/trust-me-setup
+Permission denied: run this script with sudo to set a higher priority.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 797, in <module>
+    deck.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeck.py", line 214, in open
+    self.device.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 372, in open
+    self.device_handle = self.hidapi.open_device(self.device_info['path'])
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 223, in open_device
+    raise TransportError("Could not open HID device.")
+StreamDeck.Transport.Transport.TransportError: Could not open HID device.
+Run capture_data.py -h for usage tips.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 205, in <module>
+    capture = CaptureData(seconds=args.duration, filename=args.name)
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 59, in __init__
+    self.show_rgb = show_rgby
+NameError: name 'show_rgby' is not defined
+tor 20 maj 2025 13:53:07 CEST - end time
+pygame 2.5.2 (SDL 2.28.2, Python 3.8.19)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Tobii recording with username: S_001
+Using base path: /home/dis/trust-me-setup
+Recording started
+Termination flag detected. TOBII recording has been forced to end.
+
+Recording stopped
+tor 20 maj 2025 13:53:22 CEST - reboot time
+tor 20 maj 2025 13:53:30 CEST - reboot time
+tor 20 maj 2025 13:53:42 CEST - reboot time
+tor 20 maj 2025 13:53:59 CEST - reboot time
+sre 21 maj 2025 03:01:01 CEST - start time
+conda 24.4.0
+Using username: TEST_SUBJECT
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Run capture_data.py -h for usage tips.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 205, in <module>
+    capture = CaptureData(seconds=args.duration, filename=args.name)
+  File "/home/dis/trust-me-setup/installers/data_capture/capture_data.py", line 59, in __init__
+    self.show_rgb = show_rgby
+NameError: name 'show_rgby' is not defined
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+pygame 2.5.2 (SDL 2.28.2, Python 3.8.19)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Tobii recording with username: TEST_SUBJECT
+Using base path: /home/dis/trust-me-setup
+Recording started
+Termination flag detected. TOBII recording has been forced to end.
+
+Recording stopped
+sre 21 maj 2025 08:16:01 CEST - start time
+conda 24.4.0
+Using username: TEST_SUBJECT
+Video now available. Starting script...
+Brio channel: 2
+Brio channel: 0
+Started recording RGB
+Started recording tobii
+Streamdeck running
+StreamDeck using username: TEST_SUBJECT
+Using base path: /home/dis/trust-me-setup
+Permission denied: run this script with sudo to set a higher priority.
+Traceback (most recent call last):
+  File "/home/dis/trust-me-setup/installers/streamdeck/run_streamdeck.py", line 797, in <module>
+    deck.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Devices/StreamDeck.py", line 214, in open
+    self.device.open()
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 372, in open
+    self.device_handle = self.hidapi.open_device(self.device_info['path'])
+  File "/home/dis/miniconda3/envs/tobii/lib/python3.8/site-packages/StreamDeck/Transport/LibUSBHIDAPI.py", line 223, in open_device
+    raise TransportError("Could not open HID device.")
+StreamDeck.Transport.Transport.TransportError: Could not open HID device.
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+Run capture_data.py -h for usage tips.
+Initialized mic with sampling rate 16000
+RGBCamera set with FPS: 10.0 and resolution: (3840, 2160)!
+ALSA lib pcm_dmix.c:1089:(snd_pcm_dmix_open) unable to open slave
+sre 21 maj 2025 09:30:01 CEST - end time
+Before exiting: 0
+Before exiting: 0
+Before exiting: 1
+Termination flag detected. Video recording has been forced to end.
+Stored RGB.
+Starting capture...
+CaptureData: Gracefully terminating 'audio' and 'hires' processes.
+pygame 2.5.2 (SDL 2.28.2, Python 3.8.19)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Tobii recording with username: TEST_SUBJECT
+Using base path: /home/dis/trust-me-setup
+Recording started
+Termination flag detected. TOBII recording has been forced to end.
+
+Recording stopped
+Recording audio... Press Ctrl+C to stop.
+Using BRIO Mic
+Termination flag detected. Audio recording has been forced to end.
+Error: input overflow
+Error: input overflow
+Recording saved to installers/data_collection/TEST_SUBJECT/audio/TEST_SUBJECT_2025-05-21$09-30-02-598417.wav
+Done
+sre 21 maj 2025 09:35:01 CEST - reboot time
