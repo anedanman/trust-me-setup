@@ -21,5 +21,5 @@ then
 	echo "The KEEPALIVE file was deleted! Termination started..."
 fi
 sleep 0.4
-done
 
+# python: simple-watch.c:454: avahi_simple_poll_prepare: Assertion `s->state == STATE_INIT || s->state == STATE_DISPATCHED || s->state == STATE_FAILURE' failed.

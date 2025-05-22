@@ -89,6 +89,7 @@ class RGBCamera(Camera):
         """This variable is used to prevent releasing VideoWriter twice"""
         released = False
         
+        f_open = False
         # NOT NEEDED to open the files here and then again in the loop. Now the files are only opened in the loop.
         # f = open(f"{self.save_directory}/{name}_timestamps_{time_for_timestamps}.txt", "w")
         #f.write("frame_number, timestamp\n")
@@ -115,8 +116,11 @@ class RGBCamera(Camera):
                     released = False # recording started; reset release
                     chunk_index += 1
                 # Open timestamps in any case
+                if f_open: f.close();
+                
                 f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
                 f.write("frame_number, timestamp\n")
+                f_open = True
                 while time.time() - chunk_start_time < self.chunk_size and termFlag.value != 1:
                     ret, frame = self.cap.read()
                     if not ret:
@@ -152,7 +156,7 @@ class RGBCamera(Camera):
             print("KeyboardInterrupt [camera.py]")
 
         finally:
-            f.close()
+            if f_open: f.close()
             self.cap.release()
             if not released and self.store_video: #release if not already
                 out.release()
