@@ -76,8 +76,9 @@ def alarm(deck):
     global CURRENT_Q
 
     # update icon, not sleeping
+    if not deck.is_open(): return
     for key in range(deck.key_count()):
-        if(deck.is_open()): update_key_image(deck, key, False)
+        if deck.is_open(): update_key_image(deck, key, False)
 
     if not deck.is_open(): return
     
@@ -832,12 +833,13 @@ if __name__ == "__main__":
             deck.set_key_callback(key_change_callback)
         
         time.sleep(0.5)
+        
+        timer_thread.join()
         deck.reset()
         deck.close()
         
         if not ka_exists():
             print("Termination flag detected. Stream Deck recording has been forced to end.")
-
         
         # Wait until all application threads have terminated (for this example,
         # this is when all deck handles are closed).
