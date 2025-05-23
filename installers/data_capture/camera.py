@@ -116,6 +116,8 @@ class RGBCamera(Camera):
                     released = False # recording started; reset release
                     chunk_index += 1
                 # Open timestamps in any case
+                
+                
                 if f_open: f.close();
                 
                 f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
@@ -146,7 +148,7 @@ class RGBCamera(Camera):
                         # if cv2.waitKey(1) == ord("q"):
                             # break
                 if self.store_video:
-                    out.release()
+                    if(out.isOpened()): out.release()
                     released = True # flag that we already released it here
                 print("Before exiting:", termFlag.value)
             if(termFlag.value == 1):
@@ -158,7 +160,7 @@ class RGBCamera(Camera):
         finally:
             if f_open: f.close()
             self.cap.release()
-            if not released and self.store_video: #release if not already
+            if not released and out.isOpened() and self.store_video: #release if not already
                 out.release()
             print("Stored RGB.")
 

@@ -18,6 +18,7 @@ import subprocess
 import sys
 import datetime
 import getpass
+from utils import ka_exists
 
 VERBOSE = False # Debug
 DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
@@ -50,6 +51,7 @@ else:
 
 # Get base path from second argument or use default
 BASE_PATH = sys.argv[2] if len(sys.argv) > 2 else os.path.expanduser("~/trust-me-setup")
+# keepalive_path = f"{BASE_PATH}/tmp/keepalive.td"
 
 print(f"StreamDeck using username: {USERNAME}")
 print(f"Using base path: {BASE_PATH}")
@@ -70,19 +72,23 @@ from StreamDeck.ImageHelpers import PILHelper
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 def alarm(deck):
+    if not ka_exists(): return
+    
     global FIXED_FEEDBACK
     global CURRENT_Q
 
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
+        
+    if not deck.is_open() or not ka_exists(): return 
 
-    if not deck.is_open(): return
-    
     while FIXED_FEEDBACK:
         if CURRENT_Q == 1:
+            if not ka_exists(): return
             time.sleep(1)
             deck.set_brightness(0)
+            if not ka_exists(): return
             time.sleep(1)
             deck.set_brightness(100)
 
@@ -100,43 +106,35 @@ def alarm_self_all_updates(deck):
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
-
-    if not deck.is_open(): return
-    
-    # while FIXED_FEEDBACK:
-    #     if CURRENT_Q == 1:
-    #         time.sleep(1)
-    #         deck.set_brightness(0)
-    #         time.sleep(1)
-    #         deck.set_brightness(100)
-
-    # # finished, back sleep
-    # for key in range(deck.key_count()):
-    #     update_key_image(deck, key, False)
-
-    return
-
+        
+        
+        
 def timer_function(deck):
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
     
-    while deck.is_open():
+    while deck.is_open() and ka_exists():
         # create a new sleep time:
         time_sleep = random.randint(0,DURATION)
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds
+            if not ka_exists():
+                return
             if not deck.is_open():
                 break
+            
             time.sleep(1)
 
         # time up, but wait for FREE_FEEDBACK if is
         while FREE_FEEDBACK or FIXED_FEEDBACK:
+            if not ka_exists(): return
             time.sleep(1)
-
+                    
         FIXED_FEEDBACK = True
         alarm(deck)  # Function to call every #10 seconds
-        time.sleep(time_sleep_left)
+        
+        if ka_exists(): time.sleep(time_sleep_left)
 
 # Generates a custom tile with run-time generated text and custom image via the PIL module.
 def render_key_image(deck, icon_filename, font_filename, label_text):
@@ -798,8 +796,6 @@ if __name__ == "__main__":
         deck.reset()
         deck.set_brightness(90)
 
-        
-
         timer_thread = threading.Thread(target=timer_function, args=(deck,))
         timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
         timer_thread.start()
@@ -816,10 +812,10 @@ if __name__ == "__main__":
         SLEEP_QUESTION = True
 
         # Register callback function for when a key state changes.
-        while deck.is_open():
+        while deck.is_open() and ka_exists():
             # print("flag:begin")
             # Sleep question first
-            while SLEEP_QUESTION:
+            while SLEEP_QUESTION and ka_exists():
                 for key in range(deck.key_count()):
                     update_key_image(deck, key, False)
                 deck.set_key_callback(key_change_callback)
@@ -827,10 +823,16 @@ if __name__ == "__main__":
                     update_key_image(deck, key, False)
             # print("flag:end")
 
-
-            deck.set_key_callback(key_change_callback)
-
-
+            deck.set_key_callback(key_change_callback)    
+        # Wait for the thread to finish first
+        timer_thread.join()
+        
+        deck.reset()
+        deck.close()
+        
+        if not ka_exists():
+            print("Termination flag detected. Stream Deck recording has been forced to end.")
+        
         # Wait until all application threads have terminated (for this example,
         # this is when all deck handles are closed).
         for t in threading.enumerate():
@@ -838,3 +840,4 @@ if __name__ == "__main__":
                 t.join()
             except RuntimeError:
                 pass
+    

@@ -17,7 +17,7 @@ class Mic:
     def __init__(
         self,
         sampling_rate=16000,
-        final_rate=1000,
+        final_rate=900,
         n_channels=1,
         save_directory="data/audio",
         chunk_length=60 * 60 * 2,
@@ -124,16 +124,6 @@ class Mic:
         else:
             print("No recording to save.")
         return fname
-            
-    """Downsamples the wav file, because the recording cannot be recorded under 16kHz"""
-    def resample(save_dir, old_rate, new_rate = 2000):
-        data = wavfile.read(save_dir)
-        
-        number_of_samples = round(len(data) * float(new_rate) / old_rate)
-        data = sps.resample(data, number_of_samples)
-        
-        wavfile.write(save_dir, new_rate, data)
-
 if __name__ == "__main__":
     mic = Mic()    
     mic.record(name="test", duration=10, event=None)
