@@ -72,22 +72,25 @@ from StreamDeck.ImageHelpers import PILHelper
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 def alarm(deck):
+    if not ka_exists(): return
+    
     global FIXED_FEEDBACK
     global CURRENT_Q
 
     # update icon, not sleeping
-    if not deck.is_open(): return
     for key in range(deck.key_count()):
-        if deck.is_open(): update_key_image(deck, key, False)
+        update_key_image(deck, key, False)
+        
+    if not deck.is_open() or not ka_exists(): return 
 
-    if not deck.is_open(): return
-    
     while FIXED_FEEDBACK:
         if CURRENT_Q == 1:
+            if not ka_exists(): return
             time.sleep(1)
-            if(deck.is_open()): deck.set_brightness(0)
+            deck.set_brightness(0)
+            if not ka_exists(): return
             time.sleep(1)
-            if(deck.is_open()): deck.set_brightness(100)
+            deck.set_brightness(100)
 
     # # finished, back sleep
     # for key in range(deck.key_count()):
@@ -102,9 +105,7 @@ def alarm_self_all_updates(deck):
     FIXED_FEEDBACK = True
     # update icon, not sleeping
     for key in range(deck.key_count()):
-        if deck.is_open(): update_key_image(deck, key, False)
-
-    if not deck.is_open(): return
+        update_key_image(deck, key, False)
     
     # while FIXED_FEEDBACK:
     #     if CURRENT_Q == 1:
@@ -117,13 +118,11 @@ def alarm_self_all_updates(deck):
     # for key in range(deck.key_count()):
     #     update_key_image(deck, key, False)
 
-    return
-
 def timer_function(deck):
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
     
-    while deck.is_open():
+    while deck.is_open() and ka_exists():
         # create a new sleep time:
         time_sleep = random.randint(0,DURATION)
         time_sleep_left = DURATION - time_sleep
@@ -138,10 +137,11 @@ def timer_function(deck):
 
         # time up, but wait for FREE_FEEDBACK if is
         while FREE_FEEDBACK or FIXED_FEEDBACK:
-            time.sleep(1)
-        if not ka_exists(): return
+            if ka_exists(): time.sleep(1)
+                    
         alarm(deck)  # Function to call every #10 seconds
-        time.sleep(time_sleep_left)
+        
+        if ka_exists(): time.sleep(time_sleep_left)
 
 # Generates a custom tile with run-time generated text and custom image via the PIL module.
 def render_key_image(deck, icon_filename, font_filename, label_text):
@@ -830,11 +830,10 @@ if __name__ == "__main__":
                     update_key_image(deck, key, False)
             # print("flag:end")
 
-            deck.set_key_callback(key_change_callback)
-        
-        time.sleep(0.5)
-        
+            deck.set_key_callback(key_change_callback)    
+        # Wait for the thread to finish first
         timer_thread.join()
+        
         deck.reset()
         deck.close()
         
