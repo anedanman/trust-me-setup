@@ -1,143 +1,12 @@
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-from mediapipe.tasks.python import BaseOptions
-
-import os
-from pathlib import Path
-from typing import Union
-
-import numpy as np
-from scipy.signal import savgol_filter
-import cv2
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
-from moviepy.video.io.VideoFileClip import VideoFileClip
-
-
-def extract_blendshapes(video_path):
-    base_options = BaseOptions(
-        model_asset_path='face_landmarker.task',
-        # delegate=BaseOptions.Delegate.GPU
-    )
-    
-    options = vision.FaceLandmarkerOptions(
-        base_options=base_options,
-        output_face_blendshapes=True,
-        output_facial_transformation_matrixes=True,
-        num_faces=1,
-        running_mode=vision.RunningMode.VIDEO,
-        # delegate=BaseOptions.Delegate.GPU
-    )
-    
-    with vision.FaceLandmarker.create_from_options(options) as landmarker:
-        # Get actual video duration using moviepy
-        with VideoFileClip(video_path) as video:
-            actual_duration = video.duration
-            
-        # Open video file
-        cap = cv2.VideoCapture(video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        actual_fps = total_frames / actual_duration
-        print(f'Video FPS: {fps}, Total frames: {total_frames}, Duration: {actual_duration:.2f}s', f'Actual FPS: {actual_fps}')
-        if total_frames == 0:
-            return None
-
-        # Calculate time per frame using actual duration
-        time_per_frame = actual_duration / total_frames
-        blendshapes_data = []
-        frame_count = 0
-        
-        # Wrap with tqdm for progress bar
-        with tqdm(total=total_frames, desc="Processing frames") as pbar:
-            while cap.isOpened():
-                success, frame = cap.read()
-                if not success:
-                    break
-                
-                # Convert frame to RGB (MediaPipe requires RGB)
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
-                
-                # Detect face blendshapes
-                detection_result = landmarker.detect_for_video(mp_image, frame_count)
-
-                if detection_result.face_blendshapes:
-                    # Get blendshapes for the first detected face
-                    frame_data = {
-                        'frame': frame_count,
-                        'timestamp': frame_count * time_per_frame  # Use actual time per frame
-                    }
-                    
-                    # Add all blendshape values
-                    for blendshape in detection_result.face_blendshapes[0]:
-                        frame_data[blendshape.category_name] = blendshape.score
-                        
-                    blendshapes_data.append(frame_data)
-                else:
-                    # Add empty data if no face detected
-                    blendshapes_data.append({
-                        'frame': frame_count,
-                        'timestamp': frame_count * time_per_frame  # Use actual time per frame
-                    })
-                
-                frame_count += 1
-                pbar.update(1)
-        
-        cap.release()
-        
-    return pd.DataFrame(blendshapes_data)
-
-def create_centered_weights(window):
-    """Helper function to create weights with higher values in center"""
-    # Create triangular weights
-    center = window // 2
-    weights = np.zeros(window)
-    for i in range(window):
-        weights[i] = 1 - abs(i - center) / center
-    return weights / weights.sum()  # Normalize to sum to 1
-
-def process_blendshapes(blendshapes_path: Union[str, Path]) -> pd.DataFrame:
-    import numpy as np
-    import joblib
-    import pandas as pd
-
-    # Load original data
-    df = pd.read_csv(blendshapes_path)
-    # print('original len:', len(df))
-    
-    # Create mask for valid data
-    cols_to_drop = open("cols_to_drop_2.txt").read().split("\n")
-    features_df = df.drop(columns=cols_to_drop)
-    valid_mask = ~features_df.replace(-1, np.nan).isna().any(axis=1)
-    
-    # Make predictions only for valid rows
-    if valid_mask.any():
-        clf = joblib.load("model.pkl")
-        valid_preds = clf.predict_proba(features_df[valid_mask])
-        
-        # Initialize predictions array with zeros
-        all_preds = np.zeros(len(df))
-        # Fill in valid predictions
-        all_preds[valid_mask] = valid_preds[:, 2]
-        
-        # Add predictions to original dataframe
-        df['preds'] = all_preds
-    else:
-        df['preds'] = 0
-    
-    # Smooth the predictions while preserving length
-    window = 500  # 50 seconds at 10 fps
-    weights = create_centered_weights(window)
-    df["preds"] = pd.Series(
-        np.convolve(df["preds"], weights, mode='same'),
-        index=df.index
-    )
-        
-    # print('final len:', len(df))
-    return df
+from scipy.signal import savgol_filter
+from typing import Union, List, Tuple
+from pathlib import Path
+import os
+from datetime import datetime
+import subprocess
+from moviepy.editor import VideoFileClip
 
 
 def load_eyetracking_data(filepath: Union[str, Path]) -> pd.DataFrame:
@@ -156,22 +25,25 @@ def load_eyetracking_data(filepath: Union[str, Path]) -> pd.DataFrame:
                         sep='\t',
                         skiprows=7)
         
-        # Define numeric columns
-        numeric_columns = ['TimeStamp', 'GazePointXLeft', 'GazePointYLeft', 
-                         'ValidityLeft', 'GazePointXRight', 'GazePointYRight', 
-                         'ValidityRight', 'GazePointX', 'GazePointY',
-                         'PupilSizeLeft', 'PupilValidityLeft', 'PupilSizeRight',
-                         'PupilValidityRight', 'DistanceLeft', 'DistanceRight',
-                         'AverageDistance']
+        # Replace invalid values (-1) with NaN for proper handling
+        numeric_columns = ['GazePointXLeft', 'GazePointYLeft', 'GazePointXRight', 'GazePointYRight',
+                          'GazePointX', 'GazePointY', 'PupilSizeLeft', 'PupilSizeRight',
+                          'DistanceLeft', 'DistanceRight', 'AverageDistance']
         
-        # Convert empty strings to NaN
-        df = df.replace('', 0.)
+        for col in numeric_columns:
+            if col in df.columns:
+                df[col] = df[col].replace(-1, np.nan)
+                df[col] = df[col].replace(0, np.nan)
+
         
-        # Convert numeric columns to float
-        # df[numeric_columns] = df[numeric_columns].astype(float)
+        # Fill NaN values with median for more robust handling of outliers
+        for col in numeric_columns:
+            if col in df.columns:
+                median_val = df[col].median()
+                df[col] = df[col].fillna(median_val)
         
-        # Replace -1 values with NaN
-        df = df.replace(-1, 0.)
+        # Ensure TimeStamp is numeric
+        df['TimeStamp'] = pd.to_numeric(df['TimeStamp'], errors='coerce')
         
         return df
         
@@ -199,338 +71,195 @@ def drop_initial_timewindow(df: pd.DataFrame, seconds: float) -> pd.DataFrame:
     return df_filtered
 
 
-def calculate_interest_features(df: pd.DataFrame, video_fps: float = 9.1) -> pd.DataFrame:
+def calculate_interest_features(
+    df: pd.DataFrame,
+    video_fps: float = 9.1,
+    savgol_window: int = 15,
+    savgol_poly: int = 3,
+    smoothing_window_sec: float = 10.0,
+) -> pd.DataFrame:
     """
     Calculate features indicating potential moments of interest with averaged subsampling.
     
     Args:
         df: DataFrame with eye tracking data
-        video_fps: Frame rate of video data (default 10 fps)
+        video_fps: Frame rate of video data (default 9.1 fps)
+        savgol_window: Window size for Savitzky-Golay filter
+        savgol_poly: Polynomial order for Savitzky-Golay filter
+        smoothing_window_sec: Short-term smoothing window in seconds
     """
     # Calculate time differences and basic features
     df['dt'] = df['TimeStamp'].diff() / 1000.0
-    df['dx'] = df['GazePointX'].diff()
-    df['dy'] = df['GazePointY'].diff()
-    df['eye_speed'] = np.sqrt(df['dx']**2 + df['dy']**2) / df['dt']
-    df['pupil_change'] = abs(df['PupilSizeLeft'].diff()) + abs(df['PupilSizeRight'].diff())
     
-    # Calculate window size for subsampling
-    eyetracker_fps = 1 / df['dt'].mean()
-    print('Eyetracker FPS:', eyetracker_fps)
+    # Calculate gaze velocity (eye movement speed)
+    df['gaze_dx'] = df['GazePointX'].diff()
+    df['gaze_dy'] = df['GazePointY'].diff()
+    df['gaze_velocity'] = np.sqrt(df['gaze_dx']**2 + df['gaze_dy']**2) / df['dt']
+    df['gaze_velocity'] = df['gaze_velocity'].fillna(0)
     
-    # Create time bins aligned with video frames
-    df['time_bin'] = (df['TimeStamp'] // (1000/video_fps)).astype(int)
-
-    window = 16  # About 0.25 seconds of data at 60 Hz
-    df['eye_speed'] = savgol_filter(df['eye_speed'].fillna(0), window, 3)
-    df['pupil_change'] = savgol_filter(df['pupil_change'].fillna(0), window, 3)
+    # Calculate gaze acceleration
+    df['gaze_acceleration'] = df['gaze_velocity'].diff() / df['dt']
+    df['gaze_acceleration'] = df['gaze_acceleration'].fillna(0)
     
-    print('Len of data before subsample:', len(df))
-    # Group and average by time bins
-    df_subsampled = df.groupby('time_bin').agg({
-        'TimeStamp': 'max',
-        'eye_speed': 'mean',
-        'pupil_change': 'mean',
-        'GazePointX': 'mean',
-        'GazePointY': 'mean',
-        'PupilSizeLeft': 'mean',
-        'PupilSizeRight': 'mean'
-    }).reset_index()
-    print('Len of data after subsample:', len(df_subsampled))
+    # Calculate pupil size changes
+    df['pupil_change_left'] = df['PupilSizeLeft'].diff().abs()
+    df['pupil_change_right'] = df['PupilSizeRight'].diff().abs()
+    df['pupil_change_avg'] = (df['pupil_change_left'] + df['pupil_change_right']) / 2
+    df['pupil_change_avg'] = df['pupil_change_avg'].fillna(0)
     
-    # fill NaN values with 0 in eye_speed_sustained and pupil_change_sustained
-    df_subsampled['eye_speed'] = df_subsampled['eye_speed'].fillna(0)
-    df_subsampled['pupil_change'] = df_subsampled['pupil_change'].fillna(0)
+    # Calculate distance changes (head movement indicator)
+    df['distance_change'] = df['AverageDistance'].diff().abs()
+    df['distance_change'] = df['distance_change'].fillna(0)
     
-    # Normalize features
-    for col in ['eye_speed', 'pupil_change']:
-        df_subsampled[col] = (df_subsampled[col] - df_subsampled[col].min()) / \
-                            (df_subsampled[col].max() - df_subsampled[col].min())
+    # Apply Savitzky-Golay smoothing to reduce noise
+    if len(df) > savgol_window:
+        df['gaze_velocity_smooth'] = savgol_filter(df['gaze_velocity'], 
+                                                  min(savgol_window, len(df)), 
+                                                  savgol_poly)
+        df['pupil_change_smooth'] = savgol_filter(df['pupil_change_avg'], 
+                                                 min(savgol_window, len(df)), 
+                                                 savgol_poly)
+    else:
+        df['gaze_velocity_smooth'] = df['gaze_velocity']
+        df['pupil_change_smooth'] = df['pupil_change_avg']
     
-    # Additional smoothing for better signal
-    window = 500  # 50 seconds at video fps
-    weights = create_centered_weights(window)
+    # Subsample to video frame rate
+    sampling_interval_ms = 1000.0 / video_fps
+    subsampled_timestamps = np.arange(df['TimeStamp'].min(), 
+                                    df['TimeStamp'].max(), 
+                                    sampling_interval_ms)
     
-    for col in ['eye_speed', 'pupil_change']:
-        df_subsampled[col] = pd.Series(
-            np.convolve(df_subsampled[col], weights, mode='same'),
-            index=df_subsampled.index
+    df_subsampled = pd.DataFrame({'TimeStamp': subsampled_timestamps})
+    
+    # Interpolate features to subsampled timestamps
+    features_to_interpolate = ['gaze_velocity_smooth', 'pupil_change_smooth', 
+                              'gaze_acceleration', 'distance_change']
+    
+    for feature in features_to_interpolate:
+        df_subsampled[feature] = np.interp(subsampled_timestamps, 
+                                          df['TimeStamp'], 
+                                          df[feature])
+    
+    # Normalize features to 0-1 range for combination
+    for feature in features_to_interpolate:
+        feature_values = df_subsampled[feature]
+        if feature_values.std() > 0:
+            df_subsampled[f'{feature}_norm'] = (feature_values - feature_values.min()) / (feature_values.max() - feature_values.min())
+        else:
+            df_subsampled[f'{feature}_norm'] = 0
+    
+    # Combine features into interest score with weights
+    # Higher weights for more important indicators of engagement
+    weights = {
+        'gaze_velocity_smooth_norm': 0.4,  # Eye movement is primary indicator
+        'gaze_acceleration_norm': 0.2,     # Sudden changes in movement
+        'pupil_change_smooth_norm': 0.3,   # Pupil changes indicate cognitive load
+        'distance_change_norm': 0.1        # Head movement (less important)
+    }
+    
+    df_subsampled['interest_score'] = sum(
+        weights[feature] * df_subsampled[feature] 
+        for feature in weights.keys()
+    )
+    
+    # Apply short-term smoothing to interest score
+    smoothing_window_samples = int(smoothing_window_sec * video_fps)
+    if smoothing_window_samples > 1 and len(df_subsampled) > smoothing_window_samples:
+        weights_centered = create_centered_weights(smoothing_window_samples)
+        df_subsampled['interest_score'] = np.convolve(
+            df_subsampled['interest_score'], 
+            weights_centered, 
+            mode='same'
         )
-    
-    # Calculate interest score
-    df_subsampled['interest_score'] = (df_subsampled['eye_speed'] + 
-                                      df_subsampled['pupil_change']) / 2
     
     return df_subsampled
 
 
-def process_video(args):
-    """
-    Process a single video file and save blendshapes data.
-    
-    Args:
-        args: tuple containing (video_file, video_path, blends_path)
-    """
-    video_file, video_path, blends_path = args
-    try:
-        # Full path to video file
-        video_full_path = os.path.join(video_path, video_file)
-        
-        # Extract blendshapes
-        df = extract_blendshapes(video_full_path)
-        
-        # Only save if valid data was returned
-        if df is not None:
-            # Generate output filename
-            output_filename = video_file.replace('.mp4', '_blendshapes.csv')
-            output_path = os.path.join(blends_path, output_filename)
-            df.to_csv(output_path, index=False)
-            return f"Processed {video_file} successfully"
-        else:
-            return f"Skipped {video_file} - no valid frames"
-            
-    except Exception as e:
-        return f"Error processing {video_file}: {str(e)}"
+def create_centered_weights(window):
+    """Helper function to create weights with higher values in center"""
+    # Create triangular weights
+    center = window // 2
+    weights = np.zeros(window)
+    for i in range(window):
+        weights[i] = 1 - abs(i - center) / center
+    return weights / weights.sum()  # Normalize to sum to 1
 
-def blendshapes_group(video_path='./installers/data_collection/data/hires', blends_path='./blendshapes', date='2024-08-27'):
-    """
-    Process multiple videos from a specific date in parallel and save blendshapes data.
-    
-    Args:
-        video_path: Path to directory containing videos
-        blends_path: Path to directory where blendshapes CSV files will be saved
-        date: Date string to filter videos (format: YYYY-MM-DD)
-    """
-    import os
-    from concurrent.futures import ProcessPoolExecutor
-    from pathlib import Path
-    
-    # Create blends directory if it doesn't exist
-    Path(blends_path).mkdir(parents=True, exist_ok=True)
-    
-    # Get list of video files for the specified date
-    video_files = [f for f in os.listdir(video_path) 
-                  if f.endswith('.mp4') and date in f]
-    
-    # Create arguments for processvideo
-    process_args = [(f, video_path, blends_path) for f in video_files]
-    
-    # Process videos in parallel
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        results = list(executor.map(process_video, process_args))
-    
-    # Print processing results
-    for result in results:
-        print(result)
 
-def merge_blendshapes(blends_path='./blendshapes', date='2024-08-27'):
-    import re
-    from datetime import datetime, timedelta
+def video2eye(df, start_date, end_date, video_path):
+    # assuming the dates are strings and format is "YYYY-MM-DD$HH-MM-SS-XXXXXX"
+    # the videos are named as "USERNAME_chunk{i}_{date}.mp4 in dir video_path"
+    start_dt = datetime.strptime(start_date, '%Y-%m-%d$%H-%M-%S-%f')
+    end_dt   = datetime.strptime(end_date,   '%Y-%m-%d$%H-%M-%S-%f')
+    matched = []
+    for fname in os.listdir(video_path):
+        if not fname.lower().endswith('.mp4'):
+            continue
+        parts = fname.split('_')
+        date_part = parts[-1].rsplit('.', 1)[0]
+        try:
+            file_dt = datetime.strptime(date_part, '%Y-%m-%d$%H-%M-%S-%f')
+        except ValueError:
+            continue
+        if start_dt <= file_dt <= end_dt:
+            matched.append(os.path.join(video_path, fname))
     
-    # Get all blendshape files for the specified date
-    files = [f for f in os.listdir(blends_path) 
-             if f.endswith('_blendshapes.csv') and date in f]
-    
-    # Parse filename info
-    file_info = []
-    pattern = r'(.+?)_chunk(\d+)_(\d{4}-\d{2}-\d{2}\$\d{2}-\d{2}-\d{2}-\d{6})_blendshapes\.csv'
-    
-    for f in files:
-        match = re.match(pattern, f)
-        if match:
-            nickname = match.group(1)
-            chunk_num = int(match.group(2))
-            timestamp = datetime.strptime(match.group(3), '%Y-%m-%d$%H-%M-%S-%f')
-            file_info.append((f, nickname, chunk_num, timestamp))
-    
-    # Sort by timestamp
-    file_info.sort(key=lambda x: x[3])
-    
-    # Group files by nickname and sequential chunks
-    groups = []
-    current_group = []
-    
-    for file, nickname, chunk_num, timestamp in file_info:
-        if not current_group or chunk_num == 0:
-            if current_group:  # Save previous group if exists
-                groups.append(current_group)
-            current_group = [(file, nickname, chunk_num, timestamp)]
-        else:
-            current_group.append((file, nickname, chunk_num, timestamp))
-    
-    if current_group:  # Add last group
-        groups.append(current_group)
-    
-    # Merge each group
-    for group_idx, group in enumerate(groups):
-        merged_df = None
-        nickname = group[0][1]  # Get nickname from first file in group
-        
-        accumulated_frames = 0
-        group_start_time = group[0][3]  # First chunk's start time
-        
-        for file, _, chunk_num, file_start_time in group:
-            df = pd.read_csv(os.path.join(blends_path, file))
-            
-            # Calculate actual fps for this chunk using file timestamps
-            chunk_duration = (group[chunk_num + 1][3] - file_start_time).total_seconds() if chunk_num + 1 < len(group) else None
-            if chunk_duration is None:
-                # For last chunk, use the average fps from previous chunks
-                fps = accumulated_frames / ((file_start_time - group_start_time).total_seconds())
-            else:
-                fps = len(df) / chunk_duration
-            
-            print(f"Chunk {chunk_num} FPS: {fps:.2f}")
-            
-            # Recalculate timestamps using actual fps and accumulated frames
-            df['frame'] = range(accumulated_frames, accumulated_frames + len(df))
-            df['timestamp'] = df['frame'] / fps
-            df['chunk'] = chunk_num
-            
-            # Merge with previous chunks
-            merged_df = pd.concat([merged_df, df]) if merged_df is not None else df
-            
-            # Update accumulated frames
-            accumulated_frames += len(df)
-        
-        # Save merged group
-        if merged_df is not None:
-            start_time = group[0][3].strftime('%Y-%m-%d$%H-%M-%S')
-            end_time = group[-1][3].strftime('%H-%M-%S')
-            output_name = f'{nickname}_merged_group{group_idx}_{start_time}_to_{end_time}.csv'
-            merged_df.to_csv(os.path.join(blends_path, output_name), index=False)
-            print(f"Created merged file: {output_name}")
-    return fps
+    # now load corresponding timestamp files and extract start/end times
+    video_times = []
+    for video_file in matched:
+        fname = os.path.basename(video_file)
+        parts = fname.split('_')
 
-def eyetracker2blendshapes(eyetracker_path='./installers/tobii/recordings', blends_path='./blendshapes', date='2024-08-27',
-                           fps=9.1, eye_tracking_weight=0.5, blendshape_weight=0.5):
-    """
-    Match and merge eyetracking data with blendshapes data.
-    
-    Args:
-        eyetracker_path: Path to directory containing eyetracking TSV files
-        blends_path: Path to directory containing merged blendshape CSV files
-        date: Date string to filter files (format: YYYY-MM-DD)
-        fps: Frames per second for video processing
-        eye_tracking_weight: Weight for the eye tracking component of the interest score
-        blendshape_weight: Weight for the blendshape component of the interest score
-    """
-    import re
-    from datetime import datetime, timedelta
-    
-    # Get merged blendshapes and eyetracking files
-    blend_files = [f for f in os.listdir(blends_path) 
-                   if '_merged_group' in f and date in f and not 'aligned' in f]  # Changed to match any nickname
-    eye_files = [f for f in os.listdir(eyetracker_path) 
-                 if date in f]
-    print(eye_files, blend_files)
-    # Parse timestamps
-    blend_times = []
-    blend_pattern = r'(.+?)_merged_group\d+_(\d{4}-\d{2}-\d{2}\$\d{2}-\d{2}-\d{2})'  # Added nickname capture
-    for f in blend_files:
-        match = re.search(blend_pattern, f)
-        if match:
-            nickname = match.group(1)
-            start_time = datetime.strptime(match.group(2), '%Y-%m-%d$%H-%M-%S')
-            blend_times.append((f, nickname, start_time))
-    
-    eye_times = []
-    # Updated pattern to match both start and end timestamps
-    eye_pattern = r'(.+?)_(' + date + r'\$\d{2}-\d{2}-\d{2}-\d{6})_.*\.tsv$'
-    for f in eye_files:
-        print('f:', f)
-        match = re.search(eye_pattern, f)
-        print('match:', match)
-        if match:
-            start_time = datetime.strptime(match.group(2), '%Y-%m-%d$%H-%M-%S-%f')
-            eye_times.append((f, start_time))
-    
-    # Sort by timestamp
-    blend_times.sort(key=lambda x: x[2])
-    eye_times.sort(key=lambda x: x[1])
-    
-    # Match pairs within 10 minutes threshold
-    matched_pairs = []
-    for blend_file, nickname, blend_time in blend_times:
-        best_match = None
-        min_diff = timedelta(minutes=10)
-        
-        for eye_file, eye_time in eye_times:
-            time_diff = abs(blend_time - eye_time)
-            print(f"Time diff between {blend_file} and {eye_file}: {time_diff}")
-            if time_diff < min_diff:
-                min_diff = time_diff
-                best_match = (eye_file, eye_time)
-        
-        if best_match and min_diff < timedelta(minutes=10):
-            matched_pairs.append((blend_file, nickname, best_match[0], (blend_time - best_match[1]).total_seconds()))
+        # replace chunkX with 'timestamps'
+        parts[-2] = 'timestamps'
+        ts_fname = '_'.join(parts).rsplit('.', 1)[0] + '.txt'
+        ts_path = os.path.join(video_path, ts_fname)
 
-    print(f"Matched {len(matched_pairs)} pairs:")
-    print(matched_pairs)
+        times = []
+        with open(ts_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    _, tm = line.split(',', 1)
+                except ValueError:
+                    continue
+                times.append(tm)
+        if times:
+            video_times.append((video_file, times[1], times[-1]))
+    return video_times
 
-    # Process matched pairs
-    for blend_file, nickname, eye_file, time_diff in matched_pairs:
-        # Load data
-        blend_df = process_blendshapes(os.path.join(blends_path, blend_file))
-        eye_df = load_eyetracking_data(os.path.join(eyetracker_path, eye_file))
-        print('Len of dataframes:', len(blend_df), len(eye_df))
-        eye_df = calculate_interest_features(eye_df, video_fps=fps)
-        print('Len of dataframes after processing:', len(blend_df), len(eye_df))
-        
-        # Align data using filename time difference
-        if time_diff > 0:  # Eyetracking starts first
-            eye_df = drop_initial_timewindow(eye_df, time_diff)
-        
-        # Make lengths equal by cutting extra rows
-        min_len = min(len(blend_df), len(eye_df))
-        print('Min len:', min_len)
-        blend_df = blend_df.iloc[:min_len]
-        eye_df = eye_df.iloc[:min_len]
-        print('rusulting lengths:', len(blend_df), len(eye_df))
-        
-        # Properly copy over chunk and preds from blend_df to eye_df
-        eye_df['chunk'] = blend_df['chunk'].values  # Use .values to ensure direct assignment
-        eye_df['interest_score'] = eye_tracking_weight * eye_df['interest_score'] + blendshape_weight * blend_df['preds'].values
-        
-        # Save merged result with nickname
-        output_name = f"aligned_{os.path.basename(blend_file)}"
-        eye_df.to_csv(os.path.join(blends_path, output_name), index=False)
-        print(f"Created aligned file: {output_name}")
 
 def find_top_n_peaks(df, n, delta):
     """
     Find top n peaks by highest interest score values, ensuring minimum time distance between all peaks.
     
     Args:
-        df: DataFrame containing 'interest_score', 'timestamp', and 'chunk' columns
+        df: DataFrame containing 'interest_score', and 'timestamp' columns
         n: Number of peaks to find
         delta: Minimum seconds between peaks (converted to ms internally)
     """
     delta_ms = delta * 1000  # Convert delta from seconds to milliseconds
     
-    # Create list of potential peaks sorted by score
-    peaks_info = []
-    chunk_starts = {chunk: df[df['chunk'] == chunk]['TimeStamp'].iloc[0] 
-                   for chunk in df['chunk'].unique()}
-    
     # Get indices sorted by interest_score in descending order
     sorted_indices = df['interest_score'].argsort()[::-1]
-    
+    print("Interest scores:", df['interest_score'].values)
+    print("Sorted indices:", sorted_indices)
     # Create initial peaks list with metadata
+    peaks_info = []
     for idx in sorted_indices:
-        chunk = df.loc[idx, 'chunk']
-        abs_timestamp = df.loc[idx, 'TimeStamp']
-        rel_timestamp = (abs_timestamp - chunk_starts[chunk]) / 1000.0
+        timestamp = df.loc[idx, 'TimeStamp']
         score = df.loc[idx, 'interest_score']
-        peaks_info.append((idx, abs_timestamp, rel_timestamp, chunk, score))
+        video_file = df.loc[idx, 'video_file']
+        if pd.isna(video_file):  # Skip frames without video
+            continue
+        peaks_info.append((idx, timestamp, score, video_file))
     
     # Filter peaks ensuring minimum time distance between ALL pairs
     selected_peaks = []
     for peak in peaks_info:
         # Check if this peak is far enough from ALL already selected peaks
         is_valid = True
-        if chunk == -1:
-            continue
         for selected in selected_peaks:
             if abs(peak[1] - selected[1]) < delta_ms:
                 is_valid = False
@@ -543,198 +272,305 @@ def find_top_n_peaks(df, n, delta):
     
     return selected_peaks
 
-def highlights(video_path='./installers/data_collection/data/hires', blends_path='./installers/data_collection/data/blendshapes', highlights_path='./highlights', 
-              date='2024-08-27', delta=1800, n_highlights=5, screen_recording_path=None):
-    import re
+def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
+    """
+    Extract video segments based on identified peaks of most interest and save them to highlight_dir.
+    
+    Args:
+        df: DataFrame containing 'interest_score', and 'timestamp' columns
+        peaks: List of tuples with peak timestamps and corresponding video files
+        highlight_dir: Directory to save extracted video segments
+        segment_duration: Duration of each highlight segment in seconds
+    """
     from pathlib import Path
-    from datetime import datetime, timedelta
-
-    # Create highlights directory
-    Path(highlights_path).mkdir(parents=True, exist_ok=True)
+    Path(highlight_dir).mkdir(parents=True, exist_ok=True)
     
-    # Load all aligned files
-    aligned_files = [f for f in os.listdir(blends_path) 
-                    if f.startswith('aligned_') and date in f]
-    print('aligned_files:', aligned_files)
-    highlight_n = 0
-
-    # If screen recording path provided, cache screen recordings info
-    screen_recordings = {}
-    if screen_recording_path:
-        for rec_file in os.listdir(screen_recording_path):
-            if rec_file.endswith('.mp4') and date in rec_file:
-                # Extract timestamp from filename (assuming format: *_YYYY-MM-DD$HH-MM-SS-uuuuuu.mp4)
-                time_match = re.search(rf'({date}\$\d{{2}}-\d{{2}}-\d{{2}}-\d{{6}})\.mp4$', rec_file)
-                if time_match:
-                    rec_time = datetime.strptime(time_match.group(1), '%Y-%m-%d$%H-%M-%S-%f')
-                    screen_recordings[rec_time] = rec_file
-
-    for aligned_file in aligned_files:
-        # Extract start time of the aligned file from its name
-        aligned_time_match = re.search(r'merged_group\d+_(\d{4}-\d{2}-\d{2}\$\d{2}-\d{2}-\d{2})', aligned_file)
-        if not aligned_time_match:
-            print(f"Skipping file {aligned_file} - no timestamp found")
+    for i, (idx, timestamp, score, video_file) in enumerate(peaks):
+        if pd.isna(video_file):
             continue
-        aligned_start_time = datetime.strptime(aligned_time_match.group(1), '%Y-%m-%d$%H-%M-%S')
-        
-        nickname_match = re.search(r'aligned_(.+?)_merged_group', aligned_file)
-        if not nickname_match:
-            print(f"Skipping file {aligned_file} - no nickname found")
+            
+        # Calculate start time relative to video start
+        video_rows = df[df['video_file'] == video_file]
+        if len(video_rows) == 0:
             continue
-        nickname = nickname_match.group(1)
+            
+        video_start_ts = video_rows['TimeStamp'].min()
+        relative_time = (timestamp - video_start_ts) / 1000.0  # Convert to seconds
         
-        # Load aligned data and find peaks
-        df = pd.read_csv(os.path.join(blends_path, aligned_file))
-        peaks = find_top_n_peaks(df, n_highlights, delta)
+        # Calculate segment bounds
+        start_time = max(0, relative_time - segment_duration/2)
         
-        # Cache video file information
-        video_info = {}
-        for video_file in os.listdir(video_path):
-            if video_file.endswith('.mp4') and nickname in video_file and date in video_file:
-                match = re.match(rf"{nickname}_chunk(\d+)_({date}\$\d{{2}}-\d{{2}}-\d{{2}}-\d{{6}})\.mp4", video_file)
-                if match:
-                    chunk = int(match.group(1))
-                    video_time = datetime.strptime(match.group(2), '%Y-%m-%d$%H-%M-%S-%f')
-                    if chunk not in video_info:
-                        video_info[chunk] = []
-                    video_info[chunk].append((video_file, video_time))
+        # Output filename
+        video_basename = os.path.splitext(os.path.basename(video_file))[0]
+        output_file = os.path.join(highlight_dir, f"highlight_{i+1}_{video_basename}_t{relative_time:.1f}s_score{score:.3f}.mp4")
         
-        # Process each peak
-        for i, (peak_idx, abs_timestamp, rel_timestamp, chunk, score) in enumerate(peaks):
-            if chunk not in video_info:
-                print(f"No videos found for chunk {chunk}")
-                continue
-                
-            # Get chunk start time from the dataframe
-            chunk_data = df[df['chunk'] == chunk]
-            if len(chunk_data) == 0:
-                print(f"No data found for chunk {chunk}")
-                continue
-                
-            # Calculate absolute time of the highlight
-            chunk_start_time = aligned_start_time + timedelta(seconds=chunk_data['TimeStamp'].iloc[0] / 1000)
-            highlight_time = chunk_start_time + timedelta(seconds=rel_timestamp)
+        try:
+            # Load video with moviepy
+            video = VideoFileClip(video_file)
+            end_time = min(start_time + segment_duration, video.duration)
             
-
-            # Find closest video by timestamp
-            closest_video = min(video_info[chunk], 
-                              key=lambda x: abs((x[1] - chunk_start_time).total_seconds()))
+            # Create clip
+            clip = video.subclip(start_time, end_time)
             
-
-            video_file, video_time = closest_video
-            correction_time = (video_time - chunk_start_time).total_seconds()
-            time_diff = (highlight_time - video_time).total_seconds()
-            time_diff += correction_time
+            # Write with proper encoding
+            clip.write_videofile(
+                output_file,
+                codec='libx264',
+                audio_codec='aac',
+                temp_audiofile='temp-audio.m4a',
+                remove_temp=True
+            )
             
-            # print out video time and chunk start time
-            print(f'Video time: {video_time}, Chunk{chunk} start time: {chunk_start_time}')
-            print(f'Using video {video_file} for highligsht at {highlight_time}, time difference: {time_diff:.2f}s')
+            # Clean up
+            clip.close()
+            video.close()
             
-            try:
-                # Process webcam video
-                video = VideoFileClip(os.path.join(video_path, video_file))
-                adjusted_timestamp = max(0, time_diff)
-                start_time = max(0, adjusted_timestamp - 60)
-                end_time = min(adjusted_timestamp + 60, video.duration)
-                
-                clip = video.subclipped(start_time, end_time)
-                base_name = f"{nickname}_{date}_highlight{highlight_n}_{highlight_time}_score{score:.3f}"
-                
-                # Save webcam highlight
-                clip.write_videofile(
-                    os.path.join(highlights_path, f"{base_name}_webcam.mp4"),
-                    codec='libx264',
-                    audio=False
-                )
-                
-                # Process screen recording if available
-                if screen_recording_path:
-                    # Find closest screen recording by timestamp
-                    closest_rec_time = min(screen_recordings.keys(),
-                                         key=lambda x: abs((x - highlight_time).total_seconds()))
-                    
-                    rec_file = screen_recordings[closest_rec_time]
-                    screen_video = VideoFileClip(os.path.join(screen_recording_path, rec_file))
-                    
-                    # Calculate timing in screen recording
-                    screen_time_diff = (highlight_time - closest_rec_time).total_seconds()
-                    screen_start = max(0, screen_time_diff - 60)
-                    screen_end = min(screen_time_diff + 60, screen_video.duration)
-                    
-                    screen_clip = screen_video.subclipped(screen_start, screen_end)
-                    screen_clip.write_videofile(
-                        os.path.join(highlights_path, f"{base_name}_screen.mp4"),
-                        codec='libx264',
-                        audio=False
-                    )
-                    screen_clip.close()
-                    screen_video.close()
-                
-                clip.close()
-                video.close()
-                print(f"Saved highlight: {base_name}")
-                highlight_n += 1
-                
-            except Exception as e:
-                print(f"Error processing highlight {i} from {video_file}: {str(e)}")
-                continue
+            print(f"Extracted highlight {i+1}: {output_file}")
+            
+        except Exception as e:
+            print(f"Failed to extract highlight {i+1}: {e}")
+
+def assign_video_to_frames(
+    df: pd.DataFrame,
+    video_times: List[Tuple[str, str, str]],
+    start_date: str
+) -> pd.DataFrame:
+    """
+    Add a column 'video_file' mapping each df TimeStamp (ms) to the corresponding video.
+    """
+    start_dt = datetime.strptime(start_date, '%Y-%m-%d$%H-%M-%S-%f')
+    ranges = []
+    for video_file, start_ts, end_ts in video_times:
+        s_dt = datetime.strptime(start_ts, '%Y-%m-%d$%H-%M-%S-%f')
+        e_dt = datetime.strptime(end_ts, '%Y-%m-%d$%H-%M-%S-%f')
+        s_off = (s_dt - start_dt).total_seconds() * 1000
+        e_off = (e_dt - start_dt).total_seconds() * 1000
+        ranges.append((video_file, s_off, e_off))
+
+    def lookup(ts: float):
+        for vf, s, e in ranges:
+            if s <= ts <= e:
+                return vf
+        return None
+
+    df['video_file'] = df['TimeStamp'].apply(lookup)
+    return df
 
 
-def main():
-    import argparse
-    from datetime import datetime
-
-    parser = argparse.ArgumentParser(description='Process screen recordings and generate highlights')
-    parser.add_argument('--date', type=str, 
-                       default=datetime.now().strftime('%Y-%m-%d'),
-                       help='Date to process in YYYY-MM-DD format')
-    parser.add_argument('--screen-recordings', type=str,
-                       help='Path to screen recordings directory')
-    parser.add_argument('--video-path', type=str,
-                       default='./installers/data_collection/data/hires',
-                       help='Path to webcam videos directory')
-    parser.add_argument('--blends-path', type=str,
-                       default='./blendshapes',
-                       help='Path to save/load blendshapes data')
-    parser.add_argument('--highlights-path', type=str,
-                       default='./highlights',
-                       help='Path to save highlights')
-    parser.add_argument('--skip-blendshapes', action='store_true',
-                       help='Skip blendshapes processing')
-    parser.add_argument('--skip-matching', action='store_true',
-                       help='Skip matching processing')
-    parser.add_argument('--eye_tracking_weight', type=float, default=0.5,
-                       help='Weight for the eye tracking component of the interest score')
-    parser.add_argument('--blendshape_weight', type=float, default=0.5,
-                       help='Weight for the blendshape component of the interest score')
+def merge_eyetracking_files(eye_dir: str, user: str, date: str) -> pd.DataFrame:
+    """
+    Find and merge all eye tracking files for a given date, adjusting timestamps.
     
-    args = parser.parse_args()
-    fps = 9.1
-    # Process blendshapes
-    if not args.skip_blendshapes:
-        print(f"Processing blendshapes for date: {args.date}")
-        blendshapes_group(video_path=args.video_path, 
-                         blends_path=args.blends_path,
-                         date=args.date)
-        fps = merge_blendshapes(blends_path=args.blends_path,
-                         date=args.date)
+    Args:
+        eye_dir: Directory containing eye tracking files
+        user: Username to filter files
+        date: Date string in format YYYY-MM-DD
+        
+    Returns:
+        Merged DataFrame with adjusted timestamps
+    """
+    import glob
     
-    # Process eye tracking data
-    if not args.skip_matching:
-        print(f"Processing matching data for date: {args.date}")
-        eyetracker2blendshapes(blends_path=args.blends_path,
-                              date=args.date,
-                              fps=fps,
-                              eye_tracking_weight=args.eye_tracking_weight,
-                              blendshape_weight=args.blendshape_weight)
+    # Find all TSV files for the specified date and user
+    pattern = os.path.join(eye_dir, f"{user}_{date}*.tsv")
+    files = glob.glob(pattern)
     
-    # Generate highlights
-    print(f"Generating highlights for date: {args.date}")
-    highlights(video_path=args.video_path,
-              blends_path=args.blends_path,
-              highlights_path=args.highlights_path,
-              date=args.date,
-              screen_recording_path=args.screen_recordings)
+    if not files:
+        raise FileNotFoundError(f"No eye tracking files found for {user} on {date} in {eye_dir}")
+    
+    # Sort files by filename to ensure chronological order
+    files.sort()
+    print(f"Found {len(files)} eye tracking files to merge:")
+    for f in files:
+        print(f"  {os.path.basename(f)}")
+    
+    merged_dfs = []
+    cumulative_time_offset = 0
+    
+    for i, filepath in enumerate(files):
+        print(f"Processing file {i+1}/{len(files)}: {os.path.basename(filepath)}")
+        
+        # Load the file
+        df = load_eyetracking_data(filepath)
+        
+        if len(df) == 0:
+            print(f"  Skipping empty file: {filepath}")
+            continue
+        
+        # Extract start and end times from filename for proper offset calculation
+        filename = os.path.basename(filepath)
+        parts = filename.split('_')
+        file_start_str = parts[-2]  # Start timestamp from filename
+        file_end_str = parts[-1].split('.')[0]  # End timestamp from filename
+        
+        
+        file_start_dt = datetime.strptime(file_start_str, '%Y-%m-%d$%H-%M-%S-%f')
+        file_end_dt = datetime.strptime(file_end_str, '%Y-%m-%d$%H-%M-%S-%f')
+        
+        
+        # Adjust timestamps based on actual file timing
+        if i == 0:
+            # First file: normalize to start from 0
+            min_timestamp = df['TimeStamp'].min()
+            df['TimeStamp'] = df['TimeStamp'] - min_timestamp
+            cumulative_time_offset = df['TimeStamp'].max()
+            last_file_end_dt = file_end_dt
+        else:
+            # Calculate real time gap between end of last file and start of current file
+            time_gap_seconds = (file_start_dt - last_file_end_dt).total_seconds()
+            time_gap_ms = time_gap_seconds * 1000
+            
+            print(f"  Time gap from previous file: {time_gap_seconds:.1f} seconds")
+            
+            # Adjust timestamps: normalize current file and add cumulative offset plus real gap
+            min_timestamp = df['TimeStamp'].min()
+            df['TimeStamp'] = df['TimeStamp'] - min_timestamp + cumulative_time_offset + time_gap_ms
+            
+            # Update cumulative offset to end of current file
+            cumulative_time_offset = df['TimeStamp'].max()
+            last_file_end_dt = file_end_dt
+        
+        file_duration = (file_end_dt - file_start_dt).total_seconds()
+        print(f"  File duration: {file_duration:.1f} seconds")
+        print(f"  Cumulative duration: {cumulative_time_offset/1000:.1f} seconds")
+        
+        merged_dfs.append(df)
+    
+    # Concatenate all DataFrames
+    merged_df = pd.concat(merged_dfs, ignore_index=True)
+    
+    print(f"Merged dataset: {len(merged_df)} samples, total duration: {merged_df['TimeStamp'].max()/1000:.1f} seconds")
+    
+    return merged_df
+
+
+def get_date_range_from_merged_data(merged_df: pd.DataFrame, files: List[str]) -> Tuple[str, str]:
+    """
+    Extract start and end dates from the first and last files for video matching.
+    
+    Args:
+        merged_df: Merged eye tracking DataFrame
+        files: List of original file paths
+        
+    Returns:
+        Tuple of (start_date, end_date) strings
+    """
+    if not files:
+        raise ValueError("No files provided")
+    
+    # Extract dates from first and last files
+    first_file = os.path.basename(files[0])
+    last_file = os.path.basename(files[-1])
+    
+    # Parse start date from first file
+    start_date = first_file.split('_')[-2]
+    
+    # Parse end date from last file  
+    end_date = last_file.split('_')[-1].split('.')[0]
+    
+    return start_date, end_date
+
+
+def main(date: str = None, user: str = None, eye_dir: str = None, video_dir: str = None, highlight_dir: str = None, number_of_highlights: int = None, delta_seconds: int = None):
+    """
+    Main function to process eye tracking data and extract highlights.
+    
+    Args:
+        date: Date string in format YYYY-MM-DD
+        user: Username for file filtering
+        eye_dir: Directory containing eye tracking TSV files
+        video_dir: Directory containing video files
+        highlight_dir: Directory to save extracted highlights
+        number_of_highlights: Number of highlight clips to extract
+        delta_seconds: Minimum time separation between highlights in seconds
+    """
+    import sys
+    import glob
+    
+    # Default values
+    if date is None:
+        date = '2025-05-23'
+    if user is None:
+        user = "TEST_SUBJECT"
+    if eye_dir is None:
+        eye_dir = '/home/trustme/trust-me-setup/installers/data_collection/TEST_SUBJECT/tobii/'
+    if video_dir is None:
+        video_dir = '/home/trustme/trust-me-setup/installers/data_collection/TEST_SUBJECT/hires/'
+    if highlight_dir is None:
+        highlight_dir = f'/home/trustme/trust-me-setup/highlights/{user}/'
+    if number_of_highlights is None:
+        number_of_highlights = 4
+    if delta_seconds is None:
+        delta_seconds = 1800  # 30 minutes
+
+    print(f"Processing eye tracking data for {user} on {date}")
+    print(f"Eye tracking dir: {eye_dir}")
+    print(f"Video dir: {video_dir}")
+    print(f"Highlight dir: {highlight_dir}")
+    print(f"Number of highlights: {number_of_highlights}")
+    print(f"Minimum separation: {delta_seconds} seconds")
+    
+    # Find and merge all eye tracking files for the date
+    pattern = os.path.join(eye_dir, f"{user}_{date}*.tsv")
+    files = glob.glob(pattern)
+    
+    if not files:
+        print(f"Error: No eye tracking files found for {user} on {date} in {eye_dir}")
+        return
+    
+    # Merge all files
+    df = merge_eyetracking_files(eye_dir, user, date)
+    
+    # Calculate interest features
+    print("Calculating interest features...")
+    df = calculate_interest_features(df)
+    
+    # Get date range for video matching
+    start_date, end_date = get_date_range_from_merged_data(df, files)
+    print(f"Date range: {start_date} to {end_date}")
+    
+    # Find and assign videos to frames
+    print("Finding matching videos...")
+    videos = video2eye(df, start_date, end_date, video_dir)
+    print(f"Found {len(videos)} matching videos")
+    
+    df = assign_video_to_frames(df, videos, start_date)
+
+    print("Assigned video_file column")
+    print(f"Frames with video: {len(df[df['video_file'].notna()])}")
+    print(f"Frames without video: {len(df[df['video_file'].isna()])}")
+    
+    # Find top n peaks with at least delta seconds apart
+    print(f"Finding top {number_of_highlights} peaks with {delta_seconds}s minimum separation...")
+    peaks = find_top_n_peaks(df, n=number_of_highlights, delta=delta_seconds)
+    # print("Top peaks:", peaks)
+    
+    # Extract highlights
+    print("Extracting highlights...")
+    extract_highlights(df, peaks, highlight_dir)
+    print("Done!")
+
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Extract highlights from eye tracking data')
+    parser.add_argument('--date', type=str, help='Date in format YYYY-MM-DD (default: 2025-05-23)')
+    parser.add_argument('--user', type=str, help='Username for file filtering (default: TEST_SUBJECT)')
+    parser.add_argument('--eye-dir', type=str, help='Directory containing eye tracking TSV files')
+    parser.add_argument('--video-dir', type=str, help='Directory containing video files')
+    parser.add_argument('--highlight-dir', type=str, help='Directory to save extracted highlights')
+    parser.add_argument('--highlights', type=int, help='Number of highlight clips to extract (default: 4)')
+    parser.add_argument('--separation', type=int, help='Minimum time separation between highlights in seconds (default: 1800)')
+    
+    args = parser.parse_args()
+    
+    main(
+        date=args.date,
+        user=args.user,
+        eye_dir=args.eye_dir,
+        video_dir=args.video_dir,
+        highlight_dir=args.highlight_dir,
+        number_of_highlights=args.highlights,
+        delta_seconds=args.separation
+    )
