@@ -18,6 +18,7 @@ import subprocess
 import sys
 import datetime
 import getpass
+from utils import ka_exists
 
 VERBOSE = False # Debug
 DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
@@ -50,17 +51,18 @@ else:
 
 # Get base path from second argument or use default
 BASE_PATH = sys.argv[2] if len(sys.argv) > 2 else os.path.expanduser("~/trust-me-setup")
+# keepalive_path = f"{BASE_PATH}/tmp/keepalive.td"
 
 print(f"StreamDeck using username: {USERNAME}")
 print(f"Using base path: {BASE_PATH}")
 
 # Create data directory if it doesn't exist
-DATA_DIR = os.path.join(BASE_PATH, "installers/data_collection/data/streamdeck")
+DATA_DIR = os.path.join(BASE_PATH, f"installers/data_collection/{USERNAME}/streamdeck")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Generate log filename once (instead of in each subprocess call)
 CURRENT_DATE = datetime.datetime.now().strftime("%Y-%m-%d")
-LOG_FILE = os.path.join(DATA_DIR, f"{USERNAME}_{CURRENT_DATE}")
+LOG_FILE = os.path.join(DATA_DIR, f"{CURRENT_DATE}")
 
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
@@ -75,16 +77,16 @@ def alarm(deck):
 
     # update icon, not sleeping
     for key in range(deck.key_count()):
-        update_key_image(deck, key, False)
+        if(deck.is_open()): update_key_image(deck, key, False)
 
     if not deck.is_open(): return
     
     while FIXED_FEEDBACK:
         if CURRENT_Q == 1:
             time.sleep(1)
-            deck.set_brightness(0)
+            if(deck.is_open()): deck.set_brightness(0)
             time.sleep(1)
-            deck.set_brightness(100)
+            if(deck.is_open()): deck.set_brightness(100)
 
     # # finished, back sleep
     # for key in range(deck.key_count()):
@@ -99,7 +101,7 @@ def alarm_self_all_updates(deck):
     FIXED_FEEDBACK = True
     # update icon, not sleeping
     for key in range(deck.key_count()):
-        update_key_image(deck, key, False)
+        if deck.is_open(): update_key_image(deck, key, False)
 
     if not deck.is_open(): return
     
@@ -126,15 +128,17 @@ def timer_function(deck):
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds
+            if not ka_exists():
+                return
             if not deck.is_open():
                 break
+            
             time.sleep(1)
 
         # time up, but wait for FREE_FEEDBACK if is
         while FREE_FEEDBACK or FIXED_FEEDBACK:
             time.sleep(1)
-
-        FIXED_FEEDBACK = True
+        if not ka_exists(): return
         alarm(deck)  # Function to call every #10 seconds
         time.sleep(time_sleep_left)
 
@@ -798,8 +802,6 @@ if __name__ == "__main__":
         deck.reset()
         deck.set_brightness(90)
 
-        
-
         timer_thread = threading.Thread(target=timer_function, args=(deck,))
         timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
         timer_thread.start()
@@ -816,10 +818,10 @@ if __name__ == "__main__":
         SLEEP_QUESTION = True
 
         # Register callback function for when a key state changes.
-        while deck.is_open():
+        while deck.is_open() and ka_exists():
             # print("flag:begin")
             # Sleep question first
-            while SLEEP_QUESTION:
+            while SLEEP_QUESTION and ka_exists():
                 for key in range(deck.key_count()):
                     update_key_image(deck, key, False)
                 deck.set_key_callback(key_change_callback)
@@ -827,10 +829,16 @@ if __name__ == "__main__":
                     update_key_image(deck, key, False)
             # print("flag:end")
 
-
             deck.set_key_callback(key_change_callback)
+        
+        time.sleep(0.5)
+        deck.reset()
+        deck.close()
+        
+        if not ka_exists():
+            print("Termination flag detected. Stream Deck recording has been forced to end.")
 
-
+        
         # Wait until all application threads have terminated (for this example,
         # this is when all deck handles are closed).
         for t in threading.enumerate():
@@ -838,3 +846,4 @@ if __name__ == "__main__":
                 t.join()
             except RuntimeError:
                 pass
+    
