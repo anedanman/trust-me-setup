@@ -137,7 +137,8 @@ def timer_function(deck):
 
         # time up, but wait for FREE_FEEDBACK if is
         while FREE_FEEDBACK or FIXED_FEEDBACK:
-            if ka_exists(): time.sleep(1)
+            if not ka_exists(): return
+            time.sleep(1)
                     
         alarm(deck)  # Function to call every #10 seconds
         
