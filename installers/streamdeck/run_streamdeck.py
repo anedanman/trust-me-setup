@@ -106,18 +106,9 @@ def alarm_self_all_updates(deck):
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
-    
-    # while FIXED_FEEDBACK:
-    #     if CURRENT_Q == 1:
-    #         time.sleep(1)
-    #         deck.set_brightness(0)
-    #         time.sleep(1)
-    #         deck.set_brightness(100)
-
-    # # finished, back sleep
-    # for key in range(deck.key_count()):
-    #     update_key_image(deck, key, False)
-
+        
+        
+        
 def timer_function(deck):
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
@@ -140,6 +131,7 @@ def timer_function(deck):
             if not ka_exists(): return
             time.sleep(1)
                     
+        FIXED_FEEDBACK = True
         alarm(deck)  # Function to call every #10 seconds
         
         if ka_exists(): time.sleep(time_sleep_left)
