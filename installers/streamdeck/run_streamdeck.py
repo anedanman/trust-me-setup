@@ -134,7 +134,11 @@ def timer_function(deck):
         FIXED_FEEDBACK = True
         alarm(deck)  # Function to call every #10 seconds
         
-        if ka_exists(): time.sleep(time_sleep_left)
+        for i in range(time_sleep_left):
+            if not ka_exists():
+                return
+            time.sleep(1)
+        # if ka_exists(): time.sleep(time_sleep_left) MAYBE FIX IN HERE?!
 
 # Generates a custom tile with run-time generated text and custom image via the PIL module.
 def render_key_image(deck, icon_filename, font_filename, label_text):
@@ -825,8 +829,9 @@ if __name__ == "__main__":
 
             deck.set_key_callback(key_change_callback)    
         # Wait for the thread to finish first
+        print("Waiting on the timer thread to finish...")
         timer_thread.join()
-        
+        print("Timer thread has finished")
         deck.reset()
         deck.close()
         
