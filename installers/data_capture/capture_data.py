@@ -112,7 +112,7 @@ class CaptureData:
 
         
         self.audio_process = multiprocessing.Process(
-            target=self.audio.record, args=(self.termFlag, name, seconds, self.start_event)
+            target=self.audio.record, args=(self.termFlag, name, 1800, self.start_event)
         )
         
         self.hires_process = multiprocessing.Process(
