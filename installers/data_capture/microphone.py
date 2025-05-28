@@ -47,59 +47,46 @@ class Mic:
 
         if not brio:
             print("Can't find BRIO microphone. Try plugging BRIO in and out.")
-
         exit()
         # return sd.default.device
         
 
-    def record(self, termFlag, name, duration, event):
-        
-        if duration is None or duration < 0:
-            duration = np.inf
-
-        self.duration = duration
-
+    def record(self, termFlag, name, chunkdur, event):
         if event is not None:
             event.wait()
 
         self.name = name
         self.is_recording = True
+        
         print("Recording audio... Press Ctrl+C to stop.")
 
-        start_time = pytime.time()
 
         devs = sd.query_devices()
         dev_id = self.find_default_sound_device(devs)
+        start_time = pytime.time()
 
-        with sd.InputStream(
-            device=dev_id,
-            samplerate=self.sampling_rate,
-            channels=self.n_channels,
-            callback=self.callback,
-        ):
-            try:
-                while self.is_recording and pytime.time() - start_time < duration and termFlag.value != 1:
-                    if pytime.time() - start_time > self.duration:
-                        break
-                    
-                    pytime.sleep(1)
+        while self.is_recording and termFlag.value != 1:
+            with sd.InputStream(
+                device=dev_id,
+                samplerate=self.sampling_rate,
+                channels=self.n_channels,
+                callback=self.callback,
+            ):
+                try:
+                    while pytime.time() - start_time < chunkdur and termFlag.value != 1:
+                        pytime.sleep(1)
+                except KeyboardInterrupt:
+                    print("Recording stopped by user.")
+                    self.is_recording = False
+                finally:
+                    # save the chunk
+                    self.save_recording()
+                    self.recording = []
+                    start_time = pytime.time()
                 if(termFlag.value == 1):
                     print("Termination flag detected. Audio recording has been forced to end.")
                 
-            except KeyboardInterrupt:
-                print("Recording stopped by user.")
-            finally:
-                self.is_recording = False
-                nof = self.save_recording()
-                if nof != "nofile":
-                    print("nof:", nof)
-                    # self.resample(nof, self.sampling_rate)
-                    print(f"Resampling the file to {self.final_rate} Heartz.")
-                
-
-                
     def save_recording(self):
-        fname = "nofile"
         if self.recording:
             # Convert list of recordings to a numpy array
             recording_np = np.concatenate([np.array(chunk) for chunk in self.recording], axis=0)
@@ -114,16 +101,15 @@ class Mic:
             if recording_np.dtype == 'float64':  # sounddevice might return float64
                 # Normalize and convert to int16
                 recording_int16 = np.int16(recording_np / np.max(np.abs(recording_np)) * 32767)
-                fname = filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
                 write(filename, self.final_rate, recording_int16)
             else:
                 # Save directly if already a supported type
-                fname = filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+                filename = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
                 write(filename, self.final_rate, recording_np)
             print(f"Recording saved to {filename}")
         else:
             print("No recording to save.")
-        return fname
 if __name__ == "__main__":
     mic = Mic()    
-    mic.record(name="test", duration=10, event=None)
+    # mic.record(name="test", event=None)

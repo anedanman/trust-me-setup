@@ -82,16 +82,16 @@ def alarm(deck):
         update_key_image(deck, key, False)
         
     if not deck.is_open() or not ka_exists(): return 
-
-    while FIXED_FEEDBACK:
-        if CURRENT_Q == 1:
-            if not ka_exists(): return
-            time.sleep(1)
-            deck.set_brightness(0)
-            if not ka_exists(): return
-            time.sleep(1)
-            deck.set_brightness(100)
-
+    
+    while FIXED_FEEDBACK and CURRENT_Q == 1 and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
+        time.sleep(1)
+        deck.set_brightness(0)
+        
+        if not ka_exists(): return
+        
+        time.sleep(1)
+        deck.set_brightness(100)
+        
     # # finished, back sleep
     # for key in range(deck.key_count()):
     #     update_key_image(deck, key, False)
@@ -115,7 +115,8 @@ def timer_function(deck):
     
     while deck.is_open() and ka_exists():
         # create a new sleep time:
-        time_sleep = random.randint(0,DURATION)
+        time_sleep = random.randint(0, DURATION)
+        # time_sleep = 10 #debug
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds
@@ -126,9 +127,10 @@ def timer_function(deck):
             
             time.sleep(1)
 
-        # time up, but wait for FREE_FEEDBACK if is
+        # time up, but wait for FREE_FEEDBACK if is (if a user is currently solving questions in either FREE or FIXED feedback)
         while FREE_FEEDBACK or FIXED_FEEDBACK:
             if not ka_exists(): return
+            # print ("detected here!")
             time.sleep(1)
                     
         FIXED_FEEDBACK = True
@@ -574,7 +576,7 @@ def update_key_image(deck, key, state): # device, int, False
         # Update requested key with the generated image.
         deck.set_key_image(key, image)
 
-# Prints key state change information, updates rhe key image and performs any
+# Prints key state change information, updates the key image and performs any
 # associated actions when a key is pressed.
 def key_change_callback(deck, key, state):
     global FIXED_FEEDBACK
@@ -768,14 +770,15 @@ def key_change_callback(deck, key, state):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(LOG_FILE, "a") as f:
             f.write(f"{timestamp} FEEDBACK LEVEL: {default_answer}\n")
-        
+                
         if CURRENT_Q < 9:
-            CURRENT_Q = CURRENT_Q + 1
+            CURRENT_Q += 1
+            # print("QUESTION HERE!")
             for key in range(deck.key_count()):
                 update_key_image(deck, key, False)
             return
-
         else:
+            # print("FIXED FEEDBACK OFF!")
             CURRENT_Q = 1
             FIXED_FEEDBACK = False  
             for key in range(deck.key_count()):
@@ -804,39 +807,33 @@ if __name__ == "__main__":
         timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
         timer_thread.start()
 
-        SLEEP_QUESTION = False
-        # Set initial key images.
-        for key in range(deck.key_count()):
-            update_key_image(deck, key, False)
-
-        # print("debug")
-        # time.sleep(1)
-        # deck.close()
+        #SLEEP_QUESTION = False
+        #
+        # # Set initial key images.
+        #for key in range(deck.key_count()):
+        #     update_key_image(deck, key, False)
 
         SLEEP_QUESTION = True
-
+        
         # Register callback function for when a key state changes.
-        while deck.is_open() and ka_exists():
-            # print("flag:begin")
-            # Sleep question first
-            while SLEEP_QUESTION and ka_exists():
-                for key in range(deck.key_count()):
-                    update_key_image(deck, key, False)
-                deck.set_key_callback(key_change_callback)
-                for key in range(deck.key_count()):
-                    update_key_image(deck, key, False)
-            # print("flag:end")
+        deck.set_key_callback(key_change_callback)    
 
-            deck.set_key_callback(key_change_callback)    
+        # Sleep question first
+        for key in range(deck.key_count()):
+            update_key_image(deck, key, False)
+            
+        while ka_exists():
+            time.sleep(0.2)
+        
         # Wait for the thread to finish first
-        print("Waiting on the timer thread to finish...")
+        print("StreamDeck: Waiting on the timer thread to finish...")
         timer_thread.join()
-        print("Timer thread has finished")
+        print("StreamDeck: Timer thread has finished")
+        deck.set_brightness(100)
         deck.reset()
         deck.close()
         
-        if not ka_exists():
-            print("Termination flag detected. Stream Deck recording has been forced to end.")
+        print("Termination flag detected. Stream Deck recording has been forced to end.")
         
         # Wait until all application threads have terminated (for this example,
         # this is when all deck handles are closed).
