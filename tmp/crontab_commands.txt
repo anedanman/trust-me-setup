@@ -1,5 +1,5 @@
 # Put the following commands into the user's crontab (crontab -e)
-00 07 * * * (sleep 60; echo "$(date) - start time" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/startup_script.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
+00 07 * * * (echo "$(date) - start time" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/startup_script.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
 00 17 * * * (echo "$(date) - end time" >> ~/trust-me-setup/tmp/log.txt; /bin/bash ~/trust-me-setup/tmp/kill_processes.sh)
 05 17 * * * echo "$(date) - rebooting shortly..." >> ~/trust-me-setup/tmp/log.txt
 
