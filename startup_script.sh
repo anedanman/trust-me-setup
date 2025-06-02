@@ -69,7 +69,7 @@ chmod +x "$TOBII_PATH"
 python "$BASE_PATH/installers/data_capture/auto_config_hw.py"
 
 # Run process in background
-python "$RGB_PATH" -n "$USERNAME" &
+python "$RGB_PATH" -n "$USERNAME" -d 39600 &
 echo "Started recording RGB"
 
 # Run process in background
