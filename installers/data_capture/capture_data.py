@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("-n", "--name", default=default_username, type=str)
-parser.add_argument("-d", "--duration", default="28800", type=int)
+parser.add_argument("-d", "--duration", default=28800, type=int)
 
 hw_config = None
 
@@ -200,7 +200,6 @@ if __name__ == "__main__":
         default_username = args.name
         
         # print("Username after:", default_username)
-        
         
         capture = CaptureData(seconds=args.duration, filename=args.name)
         
