@@ -84,12 +84,17 @@ def alarm(deck):
     if not deck.is_open() or not ka_exists(): return 
     
     while FIXED_FEEDBACK and CURRENT_Q == 1 and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
-        time.sleep(1)
+        for i in range (10):
+            time.sleep(0.1)
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists():
+                deck.set_brightness(100)
+                return
+            
         deck.set_brightness(0)
-        
-        if not ka_exists(): return
-        
-        time.sleep(1)
+                
+        for i in range (10):
+            time.sleep(0.1)
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists(): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
         deck.set_brightness(100)
         
     # # finished, back sleep
@@ -116,7 +121,7 @@ def timer_function(deck):
     while deck.is_open() and ka_exists():
         # create a new sleep time:
         time_sleep = random.randint(0, DURATION)
-        # time_sleep = 10 #debug
+        time_sleep = 10 #debug
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds
@@ -594,7 +599,9 @@ def key_change_callback(deck, key, state):
     # print("flag1")
     # print(FIXED_FEEDBACK)
     # print(FREE_FEEDBACK)
-
+    
+    print("In here!")
+    
     if SLEEP_QUESTION:
         # misclick
         if key in [0, 1, 2, 3, 4, 6, 7, 8]:
@@ -606,7 +613,7 @@ def key_change_callback(deck, key, state):
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             with open(LOG_FILE, "a") as f:
                 f.write(f"{timestamp} CURRENT QUESTION: SLEEP\n")
-            
+
             # record answer
             default_answer = 0
             if key == 5:
@@ -632,6 +639,9 @@ def key_change_callback(deck, key, state):
             
             SLEEP_QUESTION = False
 
+            for key in range(deck.key_count()): # The images must be updated to show the new question!
+                update_key_image(deck, key, False)
+            
             return
 
 
