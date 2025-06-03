@@ -80,13 +80,12 @@ def alarm(deck):
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
-        
     if not deck.is_open() or not ka_exists(): return 
-    
-    while FIXED_FEEDBACK and CURRENT_Q == 1 and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
+    wasSleep = SLEEP_QUESTION
+    while FIXED_FEEDBACK and (CURRENT_Q == 1 or SLEEP_QUESTION) and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
         for i in range (10):
             time.sleep(0.1)
-            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists():
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False):
                 deck.set_brightness(100)
                 return
             
@@ -94,7 +93,7 @@ def alarm(deck):
                 
         for i in range (10):
             time.sleep(0.1)
-            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists(): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
         deck.set_brightness(100)
         
     # # finished, back sleep
@@ -121,7 +120,7 @@ def timer_function(deck):
     while deck.is_open() and ka_exists():
         # create a new sleep time:
         time_sleep = random.randint(0, DURATION)
-        time_sleep = 10 #debug
+        # time_sleep = 10 #debug
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds
