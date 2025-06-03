@@ -80,9 +80,10 @@ def alarm(deck):
     # update icon, not sleeping
     for key in range(deck.key_count()):
         update_key_image(deck, key, False)
-    if not deck.is_open() or not ka_exists(): return 
-    wasSleep = SLEEP_QUESTION
-    while FIXED_FEEDBACK and (CURRENT_Q == 1 or SLEEP_QUESTION) and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
+    if not deck.is_open() or not ka_exists(): return
+    wasSleep = SLEEP_QUESTION #This flag is used to determine whether the sleep question was ever present with the fixed loop
+    while FIXED_FEEDBACK and ((not wasSleep and CURRENT_Q == 1) or (wasSleep and SLEEP_QUESTION)) and ka_exists(): # !!!!!!! - this is the line that caused the Stream Deck to basically become very slow in displaying stuff, because we had a while loop that continuously kept running
+        # Sleep in 100 millis intervals for faster response
         for i in range (10):
             time.sleep(0.1)
             if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False):
@@ -90,7 +91,7 @@ def alarm(deck):
                 return
             
         deck.set_brightness(0)
-                
+        # Sleep in 100 millis intervals for faster response
         for i in range (10):
             time.sleep(0.1)
             if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
