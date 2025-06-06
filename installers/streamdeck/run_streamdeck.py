@@ -86,7 +86,7 @@ def alarm(deck):
         # Sleep in 100 millis intervals for faster response
         for i in range (10):
             time.sleep(0.1)
-            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False):
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and not SLEEP_QUESTION):
                 deck.set_brightness(100)
                 return
             
@@ -94,7 +94,7 @@ def alarm(deck):
         # Sleep in 100 millis intervals for faster response
         for i in range (10):
             time.sleep(0.1)
-            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and SLEEP_QUESTION is False): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
+            if CURRENT_Q != 1 or not FIXED_FEEDBACK or not ka_exists() or (wasSleep and not SLEEP_QUESTION): break # Break out of for, still in while, thus setting the brightness back to 100 in any case
         deck.set_brightness(100)
         
     # # finished, back sleep
