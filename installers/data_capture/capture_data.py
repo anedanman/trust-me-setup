@@ -71,7 +71,7 @@ class CaptureData:
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
             chunk_length=self.hw_config["audio"]["chunk_length"],
-            save_directory=f"installers/data_collection/{default_username}/audio",
+            save_directory=f"data_collection/{default_username}/audio",
         )
 
         # self.rgb = RGBCamera(
@@ -94,7 +94,7 @@ class CaptureData:
             ),
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
-            save_directory=f"installers/data_collection/{default_username}/hires",
+            save_directory=f"data_collection/{default_username}/hires",
             chunk_size=self.hw_config["hires"]["chunk_length"],
         )
 

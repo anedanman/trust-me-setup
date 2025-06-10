@@ -57,7 +57,7 @@ print(f"StreamDeck using username: {USERNAME}")
 print(f"Using base path: {BASE_PATH}")
 
 # Create data directory if it doesn't exist
-DATA_DIR = os.path.join(BASE_PATH, f"installers/data_collection/{USERNAME}/streamdeck")
+DATA_DIR = os.path.join(BASE_PATH, f"data_collection/{USERNAME}/streamdeck")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Generate log filename once (instead of in each subprocess call)
@@ -121,7 +121,7 @@ def timer_function(deck):
     while deck.is_open() and ka_exists():
         # create a new sleep time:
         time_sleep = random.randint(0, DURATION)
-        # time_sleep = 10 #debug
+        time_sleep = 10 #debug
         time_sleep_left = DURATION - time_sleep
 
         for i in range(time_sleep): # Wait for SLEEP_TIME seconds

@@ -33,7 +33,7 @@ def main():
     rec_started = "{:%Y-%m-%d$%H-%M-%S-%f}".format(datetime.now())
 
     # Make sure directory exists
-    data_dir = f"{base_path}/installers/data_collection/{username}/tobii"
+    data_dir = f"{base_path}/data_collection/{username}/tobii"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
