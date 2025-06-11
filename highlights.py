@@ -489,7 +489,9 @@ def main(date: str = None, user: str = None, eye_dir: str = None, video_dir: str
     
     # Default values
     if date is None:
-        date = '2025-05-23'
+        # today's date in YYYY-MM-DD format
+        from datetime import datetime
+        date = datetime.now().strftime('%Y-%m-%d')
     if user is None:
         user = "TEST_SUBJECT"
     if eye_dir is None:
@@ -513,6 +515,8 @@ def main(date: str = None, user: str = None, eye_dir: str = None, video_dir: str
     # Find and merge all eye tracking files for the date
     pattern = os.path.join(eye_dir, f"{user}_{date}*.tsv")
     files = glob.glob(pattern)
+    # sort files to ensure chronological order
+    files.sort()
     
     if not files:
         print(f"Error: No eye tracking files found for {user} on {date} in {eye_dir}")
