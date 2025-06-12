@@ -2,7 +2,7 @@ import os
 import time
 from datetime import datetime
 from abc import ABC
-from utils import save_pid
+from utils import save_pid, camProcId
 import cv2
 import multiprocessing
 
@@ -41,13 +41,15 @@ class RGBCamera(Camera):
     ):
         super(RGBCamera, self).__init__(fps, resolution, save_directory, chunk_size)
 
-        self.channel = channel
+        self.channel = camProcId()
+        if(self.channel == -1):
+            print("No camera found to record with.")
+        else: print("Camera using channel:", self.channel)
         self.store_video = store_video
         print(f"RGBCamera set with FPS: {self.fps} and resolution: {self.resolution}!")
 
     def initCamera(self, camera_id=1):
-        """Returns capture object of the camera."""
-
+        """Returns capture object of the camera."""        
         cap = cv2.VideoCapture(camera_id)
 
         if not cap.isOpened():
@@ -67,7 +69,7 @@ class RGBCamera(Camera):
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
 
     def captureImages(self, termFlag, name="out", seconds=10, show_video=False, start_event=None, process_type="streamcam"):
-        
+        if self.channel == -1: return
         self.initCamera(camera_id=self.channel)
         self.configureCamera()
 
@@ -90,6 +92,7 @@ class RGBCamera(Camera):
         released = False
         
         f_open = False
+        chunkValid = True
         # NOT NEEDED to open the files here and then again in the loop. Now the files are only opened in the loop.
         # f = open(f"{self.save_directory}/{name}_timestamps_{time_for_timestamps}.txt", "w")
         #f.write("frame_number, timestamp\n")
@@ -102,7 +105,7 @@ class RGBCamera(Camera):
         #        self.resolution,
        #     )
         try:
-            while time.time() - start_time < seconds and termFlag.value != 1:
+            while time.time() - start_time < seconds and termFlag.value != 1 and chunkValid:
                 chunk_start_time = time.time()
                 fmtd_time = formatted_time()
                 if self.store_video or out == None:
@@ -118,7 +121,7 @@ class RGBCamera(Camera):
                 # Open timestamps in any case
                 
                 
-                if f_open: f.close();
+                if f_open: f.close()
                 
                 f = open(f"{self.save_directory}/{name}_timestamps_{fmtd_time}.txt", "w")
                 f.write("frame_number, timestamp\n")
@@ -127,6 +130,7 @@ class RGBCamera(Camera):
                     ret, frame = self.cap.read()
                     if not ret:
                         print("Can't receive frame (stream end?). Exiting ...")
+                        chunkValid = False
                         break
                      # Get the current timestamp
                     formatted_timestamp = formatted_time()
@@ -148,9 +152,9 @@ class RGBCamera(Camera):
                         # if cv2.waitKey(1) == ord("q"):
                             # break
                 if self.store_video:
-                    if(out.isOpened()): out.release()
+                    if(out.isOpened()): 
+                        out.release()
                     released = True # flag that we already released it here
-                print("Before exiting:", termFlag.value)
             if(termFlag.value == 1):
                 print("Termination flag detected. Video recording has been forced to end.")
                 

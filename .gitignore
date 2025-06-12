@@ -168,6 +168,7 @@ data/**
 installers/tobii/recordings/**
 installers/data_collection/**
 data_collection/**
+data/**
 tmp/startup_script.pid
 tmp/log.txt
 installers/streamdeck/Recording/**

@@ -71,7 +71,7 @@ class CaptureData:
             sampling_rate=self.hw_config["audio"]["sampling_rate"],
             n_channels=self.hw_config["audio"]["n_channels"],
             chunk_length=self.hw_config["audio"]["chunk_length"],
-            save_directory=f"data_collection/{default_username}/audio",
+            save_directory=f"data/{default_username}/audio",
         )
 
         # self.rgb = RGBCamera(
@@ -94,7 +94,7 @@ class CaptureData:
             ),
             channel=self.hw_config["hires"]["channel"],
             store_video=True,
-            save_directory=f"data_collection/{default_username}/hires",
+            save_directory=f"data/{default_username}/hires",
             chunk_size=self.hw_config["hires"]["chunk_length"],
         )
 
@@ -123,9 +123,9 @@ class CaptureData:
 
     def terminate(self):
         process_list = [
-            self.audio_process,
             self.hires_process,
-        ]
+            self.audio_process,
+            ]
         if not ka_exists():
             self.termFlag.value = 1 # Set the flag to 1 (= termination)
             print("CaptureData: Gracefully terminating 'audio' and 'hires' processes.")
@@ -137,8 +137,8 @@ class CaptureData:
     def capture(self):
 
         process_list = [
-            self.audio_process,
             self.hires_process,
+            self.audio_process,
         ]
 
         try:

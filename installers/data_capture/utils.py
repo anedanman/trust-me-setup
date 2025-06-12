@@ -2,6 +2,7 @@ import os
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
+import cv2
 
 def save_pid(name):
     pid = os.getpid()
@@ -33,3 +34,14 @@ if __name__ == "__main__":
 
         plt.show()
         
+def camProcId():
+    for cid in range (10):
+        cap = cv2.VideoCapture(cid)
+        try:
+            ret, frame = cap.read()
+            if ret: return cid
+        except:
+            pass
+        finally:
+            cap.release()
+    return -1 # No camera found

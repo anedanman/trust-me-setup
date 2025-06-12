@@ -44,7 +44,6 @@ class Mic:
                     print("Using BRIO Mic")
                     brio = True        
                     return dev["index"]
-
         if not brio:
             print("Can't find BRIO microphone. Try plugging BRIO in and out.")
         exit()
@@ -59,7 +58,6 @@ class Mic:
         self.is_recording = True
         
         print("Recording audio... Press Ctrl+C to stop.")
-
 
         devs = sd.query_devices()
         dev_id = self.find_default_sound_device(devs)
