@@ -41,6 +41,7 @@ dependencies:
       - libusb==1.0.27
       - matplotlib==3.7.5
       - mccabe==0.7.0
+      - moviepy==1.0.3
       - mypy-extensions==1.0.0
       - natsort==8.4.0
       - numpy==1.24.4
