@@ -1,3 +1,6 @@
 [submodule "aw-watcher-input"]
 	path = aw-watcher-input
 	url = https://github.com/anedanman/aw-watcher-input
+[submodule "online-survey"]
+	path = online-survey
+	url = https://github.com/Yumeansfish/AVAS
