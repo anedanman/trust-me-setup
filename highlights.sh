@@ -69,6 +69,6 @@ python highlights.py \
     --video-dir "$VIDEO_DIR" \
     --highlight-dir "$HIGHLIGHT_DIR" \
     --highlights 4 \
-    --separation 18 # 30 minutes separation
+    --separation 1800 # 30 minutes separation
 
 echo "Highlights generation completed!"
