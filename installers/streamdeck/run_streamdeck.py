@@ -20,24 +20,29 @@ import datetime
 import getpass
 from utils import ka_exists
 
-VERBOSE = False # Debug
-DURATION = 7200 # set glocal sleep time in seconds (2 HRS)
+VERBOSE = True # Debug
+DURATION = 10800 # set glocal sleep time in seconds (2 HRS)
+# DURATION = 10 # set glocal sleep time in seconds (2 HRS)
+
 CURRENT_Q = 1 # current question
 FIXED_FEEDBACK = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
+# Global time parameters for testing
+DAY_START_TIME = datetime.time(8, 0, 0)  # 8:30:15 AM
+DAY_END_TIME = datetime.time(17, 0, 0)   # 5:45:30 PM
 
-# TODO test
-def increase_priority():
-    try:
-        old_nice = os.nice(0)
-        os.nice(-10)
-        new_nice = os.nice(0)
-        print(f"Niceness changed from {old_nice} to {new_nice} (higher priority).")
-    except PermissionError:
-        print("Permission denied: run this script with sudo to set a higher priority.")
-    except Exception as e:
-        print(f"Error while changing niceness: {e}")
+# # # TODO test
+# def increase_priority():
+#     try:
+#         old_nice = os.nice(0)
+#         os.nice(-10)
+#         new_nice = os.nice(0)
+#         print(f"Niceness changed from {old_nice} to {new_nice} (higher priority).")
+#     except PermissionError:
+#         print("Permission denied: run this script with sudo to set a higher priority.")
+#     except Exception as e:
+#         print(f"Error while changing niceness: {e}")
 
 # Get username from command line argument or file or default
 if len(sys.argv) > 1:
@@ -70,6 +75,38 @@ from StreamDeck.ImageHelpers import PILHelper
 
 # Folder location of image assets used by this example.
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
+
+
+
+
+def is_working_hours():
+    """Check if current time is between DAY_START_TIME and DAY_END_TIME"""
+    now = datetime.datetime.now()
+    current_time = now.time()
+    return DAY_START_TIME <= current_time <= DAY_END_TIME
+
+def wait_until_nextday():
+    """Wait until next day start time"""
+    now = datetime.datetime.now()
+    
+    # Calculate next start time
+    next_start = now.replace(hour=DAY_START_TIME.hour, minute=DAY_START_TIME.minute, second=0, microsecond=0)
+    
+    # If it's already past start time today, move to tomorrow
+    if now.time() >= DAY_START_TIME:
+        next_start += datetime.timedelta(days=1)
+    
+    wait_seconds = (next_start - now).total_seconds()
+    print(f"Waiting until {next_start.strftime('%Y-%m-%d %H:%M:%S')} ({wait_seconds/3600:.1f} hours)")
+    
+    # Sleep in chunks to allow for graceful shutdown
+    while wait_seconds > 0 and ka_exists():
+        sleep_time = min(60, wait_seconds)  # Sleep max 1 minute at a time
+        time.sleep(sleep_time)
+        wait_seconds -= sleep_time
+
+
+
 
 def alarm(deck):
     if not ka_exists(): return
@@ -113,39 +150,59 @@ def alarm_self_all_updates(deck):
         update_key_image(deck, key, False)
         
         
-        
 def timer_function(deck):
+    """Modified timer function with working hours logic"""
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
     
     while deck.is_open() and ka_exists():
-        # create a new sleep time:
-        time_sleep = random.randint(0, DURATION)
-        # time_sleep = 10 #debug
-        time_sleep_left = DURATION - time_sleep
+        # Only run during working hours
+        if not is_working_hours():
+            print("Outside working hours. Waiting until next day start...")
+            wait_until_nextday()
+            continue
+            
+        # create a new sleep time (only during working hours)
+        # Calculate remaining working time for today
+        now = datetime.datetime.now()
+        end_of_work = now.replace(hour=DAY_END_TIME.hour, minute=DAY_END_TIME.minute, second=0, microsecond=0)
+        remaining_work_seconds = (end_of_work - now).total_seconds()
+        
+        # Don't exceed working hours
+        max_sleep_time = min(DURATION, int(remaining_work_seconds))
+        if max_sleep_time <= 0:
+            continue  # Go back to check working hours
+            
+        time_sleep = random.randint(0, max_sleep_time)
+        time_sleep_left = max_sleep_time - time_sleep
 
-        for i in range(time_sleep): # Wait for SLEEP_TIME seconds
-            if not ka_exists():
+        # Wait for time_sleep seconds, but check working hours
+        for i in range(time_sleep):
+            if not ka_exists() or not is_working_hours():
                 return
             if not deck.is_open():
                 break
-            
             time.sleep(1)
 
-        # time up, but wait for FREE_FEEDBACK if is (if a user is currently solving questions in either FREE or FIXED feedback)
+        # Check if still in working hours before triggering feedback
+        if not is_working_hours():
+            continue
+            
+        # time up, but wait for FREE_FEEDBACK if is active
         while FREE_FEEDBACK or FIXED_FEEDBACK:
-            if not ka_exists(): return
-            # print ("detected here!")
+            if not ka_exists() or not is_working_hours(): 
+                return
             time.sleep(1)
                     
         FIXED_FEEDBACK = True
-        alarm(deck)  # Function to call every #10 seconds
+        alarm(deck)  # Function to call
         
+        # Wait remaining time, but respect working hours
         for i in range(time_sleep_left):
-            if not ka_exists():
+            if not ka_exists() or not is_working_hours():
                 return
             time.sleep(1)
-        # if ka_exists(): time.sleep(time_sleep_left) MAYBE FIX IN HERE?!
+
 
 # Generates a custom tile with run-time generated text and custom image via the PIL module.
 def render_key_image(deck, icon_filename, font_filename, label_text):
@@ -186,19 +243,19 @@ def get_key_style(deck, key, state): # device, int, False
         elif key == 8:
             icon = "qsleep/back.png"
         elif key == 5:
-            icon = "numero/m3.png"
-        elif key == 10:
-            icon = "numero/m2.png"
-        elif key == 11:
-            icon = "numero/m1.png"
-        elif key == 12:
             icon = "numero/0.png"
-        elif key == 13:
+        elif key == 10:
             icon = "numero/1.png"
-        elif key == 14:
+        elif key == 11:
             icon = "numero/2.png"
-        elif key == 9:
+        elif key == 12:
             icon = "numero/3.png"
+        elif key == 13:
+            icon = "numero/4.png"
+        elif key == 14:
+            icon = "numero/5.png"
+        elif key == 9:
+            icon = "numero/6.png"
         elif key == 7:
             icon = "static/black.png"
 
@@ -629,7 +686,7 @@ def key_change_callback(deck, key, state):
             else:
                 default_answer = 6
 
-            default_answer = default_answer - 3
+            default_answer = default_answer
 
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             with open(LOG_FILE, "a") as f:
@@ -794,60 +851,78 @@ def key_change_callback(deck, key, state):
             return     
 
 
+# Modified main section
 if __name__ == "__main__":
-
-    # TODO test
-    increase_priority()
-    
     streamdecks = DeviceManager().enumerate()
-
 
     if len(streamdecks) and VERBOSE:
         print("Streamdeck Found.")
 
     for index, deck in enumerate(streamdecks):
-
         deck.open()
         deck.reset()
         deck.set_brightness(90)
 
-        timer_thread = threading.Thread(target=timer_function, args=(deck,))
-        timer_thread.daemon = True  # This makes the timer_thread terminate when the main program exits
-        timer_thread.start()
-
-        #SLEEP_QUESTION = False
-        #
-        # # Set initial key images.
-        #for key in range(deck.key_count()):
-        #     update_key_image(deck, key, False)
-
-        SLEEP_QUESTION = True
-        
-        # Register callback function for when a key state changes.
-        deck.set_key_callback(key_change_callback)    
-
-        # Sleep question first
-        for key in range(deck.key_count()):
-            update_key_image(deck, key, False)
-            
+        # Main loop with daily schedule
         while ka_exists():
-            time.sleep(0.2)
+            # Wait until working hours if necessary
+            if not is_working_hours():
+                print("Outside working hours. StreamDeck sleeping...")
+                # Turn off display
+                deck.reset()
+                deck.set_brightness(0)
+                wait_until_nextday()
+                
+                # Check if we should continue
+                if not ka_exists():
+                    break
+                    
+                # Reset for new day
+                deck.set_brightness(90)
+                print("New day started! Resetting to sleep question...")
+            
+            # Start timer thread for this work day
+            timer_thread = threading.Thread(target=timer_function, args=(deck,))
+            timer_thread.daemon = True
+            timer_thread.start()
+
+            # Reset to sleep question at start of each day
+            # global SLEEP_QUESTION, FIXED_FEEDBACK, FREE_FEEDBACK, CURRENT_Q
+            SLEEP_QUESTION = True
+            FIXED_FEEDBACK = False
+            FREE_FEEDBACK = False
+            CURRENT_Q = 1
+            
+            # Set initial key images
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+
+            # Register callback function
+            deck.set_key_callback(key_change_callback)    
+
+            # Main working hours loop
+            while ka_exists() and is_working_hours():
+                time.sleep(0.2)
+            
+            # End of work day - clean up
+            print("End of work day. Stopping timer thread...")
+            timer_thread.join(timeout=5)  # Wait max 5 seconds for thread to finish
+            
+            # Log end of day
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} END OF WORK DAY\n")
         
-        # Wait for the thread to finish first
-        print("StreamDeck: Waiting on the timer thread to finish...")
-        timer_thread.join()
-        print("StreamDeck: Timer thread has finished")
+        # Final cleanup
         deck.set_brightness(100)
         deck.reset()
         deck.close()
         
-        print("Termination flag detected. Stream Deck recording has been forced to end.")
+        print("StreamDeck session ended.")
         
-        # Wait until all application threads have terminated (for this example,
-        # this is when all deck handles are closed).
+        # Wait until all application threads have terminated
         for t in threading.enumerate():
             try:
                 t.join()
             except RuntimeError:
                 pass
-    
