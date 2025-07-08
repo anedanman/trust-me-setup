@@ -26,11 +26,12 @@ DURATION = 10800 # set glocal sleep time in seconds (2 HRS)
 
 CURRENT_Q = 1 # current question
 FIXED_FEEDBACK = False
+GAME_FINISHED = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
 # Global time parameters for testing
 DAY_START_TIME = datetime.time(8, 0, 0)  # 8:30:15 AM
-DAY_END_TIME = datetime.time(17, 0, 0)   # 5:45:30 PM
+DAY_END_TIME = datetime.time(23, 0, 0)   # 5:45:30 PM
 
 # # # TODO test
 # def increase_priority():
@@ -264,24 +265,27 @@ def get_key_style(deck, key, state): # device, int, False
     # sleeping render
     elif not FIXED_FEEDBACK and not FREE_FEEDBACK: 
         if key == 0:
-            name = "T"
-            icon = "T.png"
+            name = "TR"
+            icon = "TR.png"
             label = ""
         elif key == 1:
-            name = "R"
-            icon = "R.png"
+            name = "US"
+            icon = "US.png"
             label = ""
         elif key == 2:
-            name = "U"
-            icon = "U.png"
+            name = "GAME"
+            if GAME_FINISHED:
+                icon = "game_done.png"
+            else:
+                icon = "game_todo.png"
             label = ""
         elif key == 3:
-            name = "S"
-            icon = "S.png"
-            label = ""
-        elif key == 4:
             name = "T"
             icon = "T.png"
+            label = ""
+        elif key == 4:
+            name = "ME"
+            icon = "ME.png"
             label = ""
         elif key == 5:
             name = "1"
@@ -300,8 +304,8 @@ def get_key_style(deck, key, state): # device, int, False
             icon = "4.png"
             label = ""
         elif key == 9:
-            name = "ME"
-            icon = "ME.png"
+            name = "quiz"
+            icon = "quiz.png"
             label = ""
         elif key == 10:
             name = "5"
@@ -645,6 +649,7 @@ def key_change_callback(deck, key, state):
     global FREE_FEEDBACK
     global CURRENT_Q
     global SLEEP_QUESTION
+    global GAME_FINISHED
     global USERNAME
     global LOG_FILE
 
@@ -761,11 +766,18 @@ def key_change_callback(deck, key, state):
         # misclick
         if key in [0, 1, 3, 4]: return
 
-        # game mode, clicking U
+        # game mode, clicking 
         if key == 2:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with open(LOG_FILE, "a") as f:
-                f.write(f"{timestamp} GAME STARTS\n")
+            if not GAME_FINISHED:  # Only allow if not finished yet
+                GAME_FINISHED = True
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                with open(LOG_FILE, "a") as f:
+                    f.write(f"{timestamp} GAME FINISHED\n")
+                
+                # Update the button image to show game_done
+                update_key_image(deck, key, False)
+            else:
+                pass
             return
 
         # self all report
@@ -892,6 +904,8 @@ if __name__ == "__main__":
             FIXED_FEEDBACK = False
             FREE_FEEDBACK = False
             CURRENT_Q = 1
+            GAME_FINISHED = False  # Add this line
+            
             
             # Set initial key images
             for key in range(deck.key_count()):
