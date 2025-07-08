@@ -1,9 +1,9 @@
 # Put the following commands into the user's crontab (crontab -e)
-00 07 * * * (echo "$(date) - start time" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/startup_script.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
-00 17 * * * (echo "$(date) - end time" >> ~/trust-me-setup/tmp/log.txt; /bin/bash ~/trust-me-setup/tmp/kill_processes.sh)
-01 17 * * * (echo "$(date) - launching survey system" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/run_survey.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
-05 17 * * * (echo "$(date) - generating highlights" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/highlights.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
-15 17 * * * echo "$(date) - rebooting shortly..." >> ~/trust-me-setup/tmp/log.txt
+00 07 * * 1-5 (echo "$(date) - start time" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/startup_script.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
+00 17 * * 1-5 (echo "$(date) - end time" >> ~/trust-me-setup/tmp/log.txt; /bin/bash ~/trust-me-setup/tmp/kill_processes.sh)
+01 17 * * 1-5 (echo "$(date) - launching survey system" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/run_survey.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
+05 17 * * 1-5 (echo "$(date) - generating highlights" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/highlights.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
+15 17 * * 1-5 echo "$(date) - rebooting shortly..." >> ~/trust-me-setup/tmp/log.txt
 
 # Put the following command into the root's crontab (sudo crontab -e)
 30 17 * * * /sbin/reboot
