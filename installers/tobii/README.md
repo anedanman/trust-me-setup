@@ -33,7 +33,7 @@ Use the application to perform the calibration.
 
 ### 4. Test the Tracker
 
-After calibration, test the tracker using the provided script:
+After calibration, specify the actual screen resolution in the `constants.py`, and test the tracker using the provided script:
 ```
 python trackertest.py
 ```
