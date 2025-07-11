@@ -35,8 +35,8 @@ else
 fi
 
 # Define paths using SCRIPT_DIR
-EYE_DIR="$SCRIPT_DIR/installers/data_collection/$USERNAME/tobii/"
-VIDEO_DIR="$SCRIPT_DIR/installers/data_collection/$USERNAME/hires/"
+EYE_DIR="$SCRIPT_DIR/data/$USERNAME/tobii/"
+VIDEO_DIR="$SCRIPT_DIR/data/$USERNAME/hires/"
 HIGHLIGHT_DIR="$SCRIPT_DIR/highlights/"
 
 echo "Eye tracking data directory: $EYE_DIR"
