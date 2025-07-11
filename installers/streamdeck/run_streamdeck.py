@@ -814,14 +814,32 @@ def key_change_callback(deck, key, state):
 
     # FIXED_FEEDBACK loop
     else:
-        # print("flag3")
+        # Special case for question 7 - allow back button to skip
+        if CURRENT_Q == 7 and key == 8:
+            # Log the skip
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(LOG_FILE, "a") as f:
+                f.write(f"{timestamp} CURRENT QUESTION: {CURRENT_Q}\n")
+                f.write(f"{timestamp} QUESTION SKIPPED\n")
+            
+            # Move to next question
+            CURRENT_Q += 1
+            for key in range(deck.key_count()):
+                update_key_image(deck, key, False)
+            return
+        
         # record question
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(LOG_FILE, "a") as f:
             f.write(f"{timestamp} CURRENT QUESTION: {CURRENT_Q}\n")
 
-        #invalid click
-        if key in [0,1,2,3,4,6,7,8]:
+        # invalid click (modified to exclude key 8 for question 7)
+        if CURRENT_Q == 7:
+            invalid_keys = [0,1,2,3,4,6,7]  # Exclude key 8 for question 7
+        else:
+            invalid_keys = [0,1,2,3,4,6,7,8]  # Include key 8 for all other questions
+        
+        if key in invalid_keys:
             return
 
         # record answer
