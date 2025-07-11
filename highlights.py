@@ -4,6 +4,8 @@ from scipy.signal import savgol_filter
 from typing import Union, List, Tuple
 from pathlib import Path
 import os
+import glob
+import argparse
 from datetime import datetime
 import subprocess
 from moviepy.editor import VideoFileClip
@@ -287,11 +289,13 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
     
     for i, (idx, timestamp, score, video_file) in enumerate(peaks):
         if pd.isna(video_file):
+            print(f"Skipping highlight {i+1}: No video file assigned")
             continue
             
         # Calculate start time relative to video start
         video_rows = df[df['video_file'] == video_file]
         if len(video_rows) == 0:
+            print(f"Skipping highlight {i+1}: No video data found for {video_file}")
             continue
             
         video_start_ts = video_rows['TimeStamp'].min()
@@ -309,26 +313,70 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
             video = VideoFileClip(video_file)
             end_time = min(start_time + segment_duration, video.duration)
             
-            # Create clip
+            # Get fps from original video or use default
+            fps = video.fps if video.fps is not None else 10.0
+            print(f"Video fps: {video.fps}, Using fps: {fps}")
+            print(f"Video duration: {video.duration}, Video size: {video.size}")
+            
+            # Create clip and ensure it has the correct fps
             clip = video.subclip(start_time, end_time)
             
-            # Write with proper encoding
-            clip.write_videofile(
-                output_file,
-                codec='libx264',
-                audio_codec='aac',
-                temp_audiofile='temp-audio.m4a',
-                remove_temp=True
-            )
+            print(f"Processing highlight {i+1}: start time {start_time:.2f}s, end time: {end_time:.2f}s")
+            print(f"Original clip fps: {clip.fps}")
+            
+            # Try using ffmpeg directly through subprocess as a fallback
+            import subprocess
+            import tempfile
+            
+            with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_file:
+                temp_output = tmp_file.name
+            
+            # Use ffmpeg directly to extract the segment
+            cmd = [
+                'ffmpeg', '-y',
+                '-i', video_file,
+                '-ss', str(start_time),
+                '-t', str(end_time - start_time),
+                '-c:v', 'libx264',
+                '-c:a', 'aac',
+                '-r', str(fps),
+                temp_output
+            ]
+            
+            print(f"Running ffmpeg command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                # Move the temp file to the final location
+                import shutil
+                shutil.move(temp_output, output_file)
+                print(f"Extracted highlight {i+1}: {output_file}")
+            else:
+                print(f"FFmpeg failed with return code {result.returncode}")
+                print(f"Error output: {result.stderr}")
+                # Clean up temp file
+                try:
+                    os.unlink(temp_output)
+                except:
+                    pass
             
             # Clean up
             clip.close()
             video.close()
             
-            print(f"Extracted highlight {i+1}: {output_file}")
-            
         except Exception as e:
             print(f"Failed to extract highlight {i+1}: {e}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            # Clean up in case of error
+            try:
+                if 'clip' in locals():
+                    clip.close()
+                if 'video' in locals():
+                    video.close()
+            except:
+                pass
 
 def assign_video_to_frames(
     df: pd.DataFrame,
@@ -484,8 +532,6 @@ def main(date: str = None, user: str = None, eye_dir: str = None, video_dir: str
         number_of_highlights: Number of highlight clips to extract
         delta_seconds: Minimum time separation between highlights in seconds
     """
-    import sys
-    import glob
     
     # Default values
     if date is None:
@@ -578,3 +624,4 @@ if __name__ == "__main__":
         number_of_highlights=args.highlights,
         delta_seconds=args.separation
     )
+
