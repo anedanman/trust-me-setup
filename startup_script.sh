@@ -10,7 +10,7 @@ source "$HOME/miniconda3/etc/profile.d/conda.sh"
 echo $(conda --version)
 
 # Define centralized username for all data collection
-USERNAME=${1:-"TEST_SUBJECT"}
+USERNAME=${1:-"Dani_Test"}
 echo "Using username: $USERNAME"
 
 # Define base path
@@ -79,6 +79,16 @@ echo "Started recording tobii"
 # Run process in background
 python "$STREAMDECK_PATH" "$USERNAME" "$BASE_PATH" &
 echo "Streamdeck running"
+
+# Configurable warmup time (default 30 seconds)
+WARMUP_TIME=${WARMUP_TIME:-30}  # 30 seconds
+echo "Waiting ${WARMUP_TIME} seconds for data collection to initialize..."
+echo "This allows recording devices to start collecting data before monitoring begins."
+sleep $WARMUP_TIME
+
+# Run data monitor in background
+python "$BASE_PATH/data_monitor.py" &
+echo "Data monitor running"
 
 wait
 echo "Done"
