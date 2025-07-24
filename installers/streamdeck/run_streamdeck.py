@@ -29,9 +29,6 @@ FIXED_FEEDBACK = False
 GAME_FINISHED = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
-# Global time parameters for testing
-DAY_START_TIME = datetime.time(6, 0, 0)  # 8:30:15 AM
-DAY_END_TIME = datetime.time(23, 0, 0)   # 5:45:30 PM
 
 # # # TODO test
 # def increase_priority():
@@ -78,37 +75,6 @@ from StreamDeck.ImageHelpers import PILHelper
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 
-
-
-def is_working_hours():
-    """Check if current time is between DAY_START_TIME and DAY_END_TIME"""
-    now = datetime.datetime.now()
-    current_time = now.time()
-    return DAY_START_TIME <= current_time <= DAY_END_TIME
-
-def wait_until_nextday():
-    """Wait until next day start time"""
-    now = datetime.datetime.now()
-    
-    # Calculate next start time
-    next_start = now.replace(hour=DAY_START_TIME.hour, minute=DAY_START_TIME.minute, second=0, microsecond=0)
-    
-    # If it's already past start time today, move to tomorrow
-    if now.time() >= DAY_START_TIME:
-        next_start += datetime.timedelta(days=1)
-    
-    wait_seconds = (next_start - now).total_seconds()
-    print(f"Waiting until {next_start.strftime('%Y-%m-%d %H:%M:%S')} ({wait_seconds/3600:.1f} hours)")
-    
-    # Sleep in chunks to allow for graceful shutdown
-    while wait_seconds > 0 and ka_exists():
-        sleep_time = min(60, wait_seconds)  # Sleep max 1 minute at a time
-        time.sleep(sleep_time)
-        wait_seconds -= sleep_time
-
-
-
-
 def alarm(deck):
     if not ka_exists(): return
     
@@ -152,55 +118,35 @@ def alarm_self_all_updates(deck):
         
         
 def timer_function(deck):
-    """Modified timer function with working hours logic"""
+    """Simplified timer function without working hours logic"""
     global FIXED_FEEDBACK
     global FREE_FEEDBACK
     
     while deck.is_open() and ka_exists():
-        # Only run during working hours
-        if not is_working_hours():
-            print("Outside working hours. Waiting until next day start...")
-            wait_until_nextday()
-            continue
-            
-        # create a new sleep time (only during working hours)
-        # Calculate remaining working time for today
-        now = datetime.datetime.now()
-        end_of_work = now.replace(hour=DAY_END_TIME.hour, minute=DAY_END_TIME.minute, second=0, microsecond=0)
-        remaining_work_seconds = (end_of_work - now).total_seconds()
-        
-        # Don't exceed working hours
-        max_sleep_time = min(DURATION, int(remaining_work_seconds))
-        if max_sleep_time <= 0:
-            continue  # Go back to check working hours
-            
-        time_sleep = random.randint(0, max_sleep_time)
-        time_sleep_left = max_sleep_time - time_sleep
+        # Create a random sleep time
+        time_sleep = random.randint(0, DURATION)
+        time_sleep_left = DURATION - time_sleep
 
-        # Wait for time_sleep seconds, but check working hours
+        # Wait for time_sleep seconds
         for i in range(time_sleep):
-            if not ka_exists() or not is_working_hours():
+            if not ka_exists():
                 return
             if not deck.is_open():
                 break
             time.sleep(1)
-
-        # Check if still in working hours before triggering feedback
-        if not is_working_hours():
-            continue
             
         # time up, but wait for FREE_FEEDBACK if is active
         while FREE_FEEDBACK or FIXED_FEEDBACK:
-            if not ka_exists() or not is_working_hours(): 
+            if not ka_exists(): 
                 return
             time.sleep(1)
                     
         FIXED_FEEDBACK = True
         alarm(deck)  # Function to call
         
-        # Wait remaining time, but respect working hours
+        # Wait remaining time
         for i in range(time_sleep_left):
-            if not ka_exists() or not is_working_hours():
+            if not ka_exists():
                 return
             time.sleep(1)
 
@@ -893,57 +839,32 @@ if __name__ == "__main__":
         deck.reset()
         deck.set_brightness(90)
 
-        # Main loop with daily schedule
+        # Start timer thread
+        timer_thread = threading.Thread(target=timer_function, args=(deck,))
+        timer_thread.daemon = True
+        timer_thread.start()
+
+        # Initialize variables
+        SLEEP_QUESTION = True
+        FIXED_FEEDBACK = False
+        FREE_FEEDBACK = False
+        CURRENT_Q = 1
+        GAME_FINISHED = False
+        
+        # Set initial key images
+        for key in range(deck.key_count()):
+            update_key_image(deck, key, False)
+
+        # Register callback function
+        deck.set_key_callback(key_change_callback)    
+
+        # Main loop - just wait
         while ka_exists():
-            # Wait until working hours if necessary
-            if not is_working_hours():
-                print("Outside working hours. StreamDeck sleeping...")
-                # Turn off display
-                deck.reset()
-                deck.set_brightness(0)
-                wait_until_nextday()
-                
-                # Check if we should continue
-                if not ka_exists():
-                    break
-                    
-                # Reset for new day
-                deck.set_brightness(90)
-                print("New day started! Resetting to sleep question...")
-            
-            # Start timer thread for this work day
-            timer_thread = threading.Thread(target=timer_function, args=(deck,))
-            timer_thread.daemon = True
-            timer_thread.start()
-
-            # Reset to sleep question at start of each day
-            # global SLEEP_QUESTION, FIXED_FEEDBACK, FREE_FEEDBACK, CURRENT_Q
-            SLEEP_QUESTION = True
-            FIXED_FEEDBACK = False
-            FREE_FEEDBACK = False
-            CURRENT_Q = 1
-            GAME_FINISHED = False  # Add this line
-            
-            
-            # Set initial key images
-            for key in range(deck.key_count()):
-                update_key_image(deck, key, False)
-
-            # Register callback function
-            deck.set_key_callback(key_change_callback)    
-
-            # Main working hours loop
-            while ka_exists() and is_working_hours():
-                time.sleep(0.2)
-            
-            # End of work day - clean up
-            print("End of work day. Stopping timer thread...")
-            timer_thread.join(timeout=5)  # Wait max 5 seconds for thread to finish
-            
-            # Log end of day
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with open(LOG_FILE, "a") as f:
-                f.write(f"{timestamp} END OF WORK DAY\n")
+            time.sleep(0.2)
+        
+        # Cleanup
+        print("Stopping timer thread...")
+        timer_thread.join(timeout=5)
         
         # Final cleanup
         deck.set_brightness(100)
