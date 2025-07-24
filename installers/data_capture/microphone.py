@@ -76,13 +76,14 @@ class Mic:
                 except KeyboardInterrupt:
                     print("Recording stopped by user.")
                     self.is_recording = False
-                finally:
-                    # save the chunk
-                    self.save_recording()
-                    self.recording = []
-                    start_time = pytime.time()
-                if(termFlag.value == 1):
-                    print("Termination flag detected. Audio recording has been forced to end.")
+                    break
+                
+            self.save_recording()
+            self.recording = []
+            start_time = pytime.time()
+            if(termFlag.value == 1):
+                print("Termination flag detected. Audio recording has been forced to end.")
+                break
                 
     def save_recording(self):
         if self.recording:
