@@ -30,7 +30,7 @@ GAME_FINISHED = False
 SLEEP_QUESTION = True
 FREE_FEEDBACK = False
 # Global time parameters for testing
-DAY_START_TIME = datetime.time(8, 0, 0)  # 8:30:15 AM
+DAY_START_TIME = datetime.time(6, 0, 0)  # 8:30:15 AM
 DAY_END_TIME = datetime.time(23, 0, 0)   # 5:45:30 PM
 
 # # # TODO test
