@@ -61,11 +61,17 @@ class Mic:
 
         devs = sd.query_devices()
         dev_id = self.find_default_sound_device(devs)
+        
+        # ─────────────── Force PulseAudio (or PipeWire) + input-only ───────────────
+        hostapis = sd.query_hostapis()
+        pulse_idx = next((i for i, api in enumerate(hostapis) if "pulse" in api["name"].lower()), None)
+        if pulse_idx is not None:
+            sd.default.hostapi = pulse_idx       # use PulseAudio host API
+        sd.default.device = (dev_id, None)       # input=device, no output
+        
         start_time = pytime.time()
-
         while self.is_recording and termFlag.value != 1:
             with sd.InputStream(
-                device=dev_id,
                 samplerate=self.sampling_rate,
                 channels=self.n_channels,
                 callback=self.callback,
