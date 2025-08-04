@@ -34,6 +34,8 @@ class Mic:
         self.chunk_length   = chunk_length
         self.recording      = []
         self.is_recording   = False
+        self.chunk_nr       = 0
+        self.current_stamp  = None
 
     # ------------------------------------------------------------------ #
     #  Callback                                                          #
@@ -76,7 +78,7 @@ class Mic:
         self.name = name
         self.is_recording = True
         print("Recording audio…")
-
+        
         devs   = sd.query_devices()
         dev_id = self.find_default_sound_device(devs)
 
@@ -102,13 +104,15 @@ class Mic:
                     dtype='float32',            # exact hardware format
                     device=dev_id,
                     callback=self.callback):
-
+                self.current_stamp = formatted_time()
                 next_flush = pytime.time() + chunkdur
                 while self.is_recording and termFlag.value != 1:
-                    pytime.sleep(0.5)
+                    #pytime.sleep(0.5)
                     if pytime.time() >= next_flush:
                         self.save_recording()
                         self.recording = []
+                        self.chunk_nr += 1
+                        self.current_stamp = formatted_time()
                         next_flush += chunkdur
 
         except sd.PortAudioError as e:
@@ -160,10 +164,9 @@ class Mic:
 
         # 5) write WAV
         os.makedirs(self.save_directory, exist_ok=True)
-        fname = f"{self.save_directory}/{self.name}_{formatted_time()}.wav"
+        fname = f"{self.save_directory}/{self.name}_chunk{self.chunk_nr}_{self.current_stamp}.wav"
         write(fname, target_rate, pcm16)
         print(f"Saved band-limited audio to {fname}")
-
 
 
 # --------------------------------------------------------------------------
