@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Data Monitoring Script
-Checks data folder sizes every 3 hours and sends email alerts if folders haven't grown.
+Records current data folder sizes and sends an email report with measurement history.
+Runs once when launched, keeps history of up to 5 measurements.
 """
 
 import os
@@ -54,16 +55,16 @@ print(f"From Email: {FROM_EMAIL}")
 # Configuration - can be overridden by environment variables
 USERNAME_FILE = SCRIPT_DIR / "tmp" / "current_username"
 STATE_FILE = SCRIPT_DIR / "tmp" / "data_monitor_state.json"
-CHECK_INTERVAL = 1 * 60 * 60  # 1 hour in seconds
+MAX_HISTORY = 5  # Show up to 5 measurements per device in email (all measurements stored locally)
 
 # Data Monitor specific recipient email
-RECIPIENT_EMAIL = ""
+RECIPIENT_EMAIL = "daniil.kirilenko@usi.ch"
 
 print(f"Recipient Email: {RECIPIENT_EMAIL if RECIPIENT_EMAIL else 'Not configured'}")
 print("=" * 50)
 
 # Devices to monitor (subfolder names in data/USERNAME/)
-DEVICES = ["audio", "hires", "tobii"]
+DEVICES = ["audio", "hires", "tobii", "streamdeck", "highlights"]
 
 def get_username():
     """Read username from tmp/current_username file"""
@@ -85,18 +86,32 @@ def get_folder_size(folder_path):
         if not folder_path.exists():
             return 0
         
-        # Use du command for accurate folder size
+        # Use du command for accurate folder size (macOS compatible)
         result = subprocess.run(
-            ["du", "-sb", str(folder_path)], 
+            ["du", "-sk", str(folder_path)], 
             capture_output=True, 
             text=True, 
             check=True
         )
-        size_bytes = int(result.stdout.split()[0])
+        size_kb = int(result.stdout.split()[0])
+        size_bytes = size_kb * 1024  # Convert KB to bytes
         return size_bytes
     except (subprocess.CalledProcessError, ValueError, IndexError) as e:
         print(f"Error getting size for {folder_path}: {e}")
-        return 0
+        # Fallback to Python-based calculation
+        try:
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(folder_path):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    try:
+                        total_size += os.path.getsize(filepath)
+                    except (OSError, IOError):
+                        continue
+            return total_size
+        except Exception as fallback_e:
+            print(f"Fallback size calculation also failed: {fallback_e}")
+            return 0
 
 def load_state():
     """Load previous state from JSON file"""
@@ -110,12 +125,25 @@ def load_state():
         print(f"Error loading state: {e}")
         return {}
 
-def save_state(state):
-    """Save current state to JSON file"""
+def save_state(new_measurement):
+    """Save current measurement to history in JSON file"""
     try:
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Load existing state
+        state = load_state()
+        
+        # Initialize history if it doesn't exist
+        if "history" not in state:
+            state["history"] = []
+        
+        # Add new measurement to history (keep all measurements)
+        state["history"].append(new_measurement)
+        
+        # Save updated state (no limit on stored history)
         with open(STATE_FILE, 'w') as f:
             json.dump(state, f, indent=2)
+            
     except Exception as e:
         print(f"Error saving state: {e}")
 
@@ -155,13 +183,14 @@ def send_email_alert(subject, body):
         return False
 
 def check_data_folders():
-    """Check data folder sizes and send alerts if needed"""
+    """Check data folder sizes and send email with measurement history"""
     username = get_username()
     current_time = datetime.now()
     current_timestamp = current_time.isoformat()
     
     # Load previous state
     state = load_state()
+    history = state.get("history", [])
     
     # Base data directory for the user
     user_data_dir = SCRIPT_DIR / "data" / username
@@ -170,94 +199,164 @@ def check_data_folders():
         print(f"Warning: User data directory not found: {user_data_dir}")
         return
     
-    alerts = []
-    current_sizes = {}
+    # Current measurement
+    current_measurement = {
+        "timestamp": current_timestamp,
+        "devices": {}
+    }
     
     print(f"\n=== Data Monitor Check - {current_time.strftime('%Y-%m-%d %H:%M:%S')} ===")
     
     for device in DEVICES:
-        device_folder = user_data_dir / device
+        # Special case for highlights - monitor directly in script directory
+        if device == "highlights":
+            device_folder = SCRIPT_DIR / "highlights"
+        else:
+            device_folder = user_data_dir / device
+            
         current_size = get_folder_size(device_folder)
-        current_sizes[device] = {
+        current_measurement["devices"][device] = {
             "size": current_size,
-            "timestamp": current_timestamp,
             "path": str(device_folder)
         }
         
         print(f"{device:12}: {format_size(current_size):>10} ({device_folder})")
-        
-        # Check if we have previous data for this device
-        if device in state:
-            previous_size = state[device].get("size", 0)
-            previous_timestamp = state[device].get("timestamp", "unknown")
-            
-            # If size hasn't increased, create alert
-            if current_size <= previous_size:
-                time_diff = "unknown"
-                try:
-                    prev_time = datetime.fromisoformat(previous_timestamp)
-                    time_diff = current_time - prev_time
-                    time_diff_str = f"{time_diff.total_seconds() / 3600:.1f} hours"
-                except:
-                    time_diff_str = "unknown duration"
-                
-                alert_msg = (
-                    f"Device '{device}' folder has not grown since last check.\n"
-                    f"  Current size: {format_size(current_size)}\n"
-                    f"  Previous size: {format_size(previous_size)}\n"
-                    f"  Time since last check: {time_diff_str}\n"
-                    f"  Folder path: {device_folder}"
-                )
-                alerts.append(alert_msg)
-                print(f"  ⚠️  ALERT: No growth detected!")
-            else:
-                growth = current_size - previous_size
-                print(f"  ✅ Growth: +{format_size(growth)}")
-        else:
-            print(f"  ℹ️  First check for this device")
     
-    # Send email if there are alerts
-    if alerts:
-        subject = f"Data Monitor Alert - {username} - {current_time.strftime('%Y-%m-%d %H:%M')}"
-        body = (
-            f"Data monitoring alert for user: {username}\n"
-            f"Check time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            f"The following devices have not recorded new data since the last check:\n\n"
-        )
-        body += "\n\n".join(alerts)
-        body += f"\n\nThis check was performed at: {current_time.strftime('%Y-%m-%d %H:%M:%S')}"
-        
-        send_email_alert(subject, body)
+    # Generate email report
+    subject = f"Data Monitor Report - {username} - {current_time.strftime('%Y-%m-%d %H:%M')}"
+    body = generate_email_report(username, current_time, current_measurement, history)
+    
+    # Send email
+    send_email_alert(subject, body)
+    
+    # Save current measurement to history
+    save_state(current_measurement)
+    print(f"Measurement saved to history: {STATE_FILE}")
+
+def generate_email_report(username, current_time, current_measurement, history):
+    """Generate detailed email report with measurement history"""
+    body = f"Data monitoring report for user: {username}\n"
+    body += f"Report generated: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    
+    # Add current measurement info
+    body += "=== CURRENT MEASUREMENT ===\n"
+    for device in DEVICES:
+        size = current_measurement["devices"][device]["size"]
+        path = current_measurement["devices"][device]["path"]
+        body += f"{device}: {format_size(size)} ({path})\n"
+    
+    body += "\n=== MEASUREMENT HISTORY ===\n"
+    body += f"(Showing last {MAX_HISTORY} measurements per device)\n"
+    
+    if not history:
+        body += "No previous measurements found. This is the first measurement.\n"
     else:
-        print("✅ All devices are recording data normally")
+        # Show history for each device
+        for device in DEVICES:
+            body += f"\n--- {device.upper()} HISTORY ---\n"
+            
+            # Get device history (including current measurement)
+            device_history = []
+            for measurement in history:
+                if device in measurement.get("devices", {}):
+                    device_history.append({
+                        "timestamp": measurement["timestamp"],
+                        "size": measurement["devices"][device]["size"]
+                    })
+            
+            # Add current measurement
+            device_history.append({
+                "timestamp": current_measurement["timestamp"],
+                "size": current_measurement["devices"][device]["size"]
+            })
+            
+            # Sort by timestamp (oldest first)
+            device_history.sort(key=lambda x: x["timestamp"])
+            
+            # Keep only the last MAX_HISTORY measurements for email display
+            if len(device_history) > MAX_HISTORY:
+                device_history = device_history[-MAX_HISTORY:]
+            
+            # Display history
+            for i, entry in enumerate(device_history):
+                try:
+                    timestamp = datetime.fromisoformat(entry["timestamp"])
+                    time_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                except:
+                    time_str = entry["timestamp"]
+                
+                size = entry["size"]
+                body += f"  {i+1}. {time_str}: {format_size(size)}"
+                
+                # Check for growth compared to previous measurement
+                if i > 0:
+                    prev_size = device_history[i-1]["size"]
+                    if size > prev_size:
+                        growth = size - prev_size
+                        body += f" (📈 +{format_size(growth)})"
+                    elif size == prev_size:
+                        body += f" (⚠️ NO GROWTH)"
+                    else:
+                        shrinkage = prev_size - size
+                        body += f" (📉 -{format_size(shrinkage)})"
+                
+                # Mark current measurement
+                if i == len(device_history) - 1:
+                    body += " ← CURRENT"
+                
+                body += "\n"
+            
+            # Summary for this device (based on displayed history)
+            if len(device_history) > 1:
+                first_size = device_history[0]["size"]
+                last_size = device_history[-1]["size"]
+                total_growth = last_size - first_size
+                
+                if total_growth > 0:
+                    body += f"  📊 Growth in displayed period: +{format_size(total_growth)}\n"
+                elif total_growth == 0:
+                    body += f"  ⚠️ NO GROWTH in displayed period\n"
+                else:
+                    body += f"  📉 Shrinkage in displayed period: -{format_size(-total_growth)}\n"
     
-    # Save current state
-    save_state(current_sizes)
-    print(f"State saved to: {STATE_FILE}")
+    body += f"\n=== SUMMARY ===\n"
+    
+    # Check if any devices haven't grown since last measurement
+    stale_devices = []
+    if history:
+        last_measurement = history[-1] if history else None
+        if last_measurement:
+            for device in DEVICES:
+                current_size = current_measurement["devices"][device]["size"]
+                if device in last_measurement.get("devices", {}):
+                    last_size = last_measurement["devices"][device]["size"]
+                    if current_size <= last_size:
+                        stale_devices.append(device)
+    
+    if stale_devices:
+        body += f"⚠️ Devices with no growth since last measurement: {', '.join(stale_devices)}\n"
+    else:
+        body += "✅ All devices showed growth since last measurement\n"
+    
+    body += f"\nTotal measurements in history (local): {len(history) + 1}\n"
+    body += f"Measurements shown in email: up to {MAX_HISTORY} per device\n"
+    body += f"Report generated at: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+    
+    return body
 
 def main():
-    """Main monitoring loop"""
+    """Main function - runs a single check and sends email report"""
     print("Starting Data Monitor...")
-    print(f"Check interval: {CHECK_INTERVAL / 3600} hours")
     print(f"Monitoring devices: {', '.join(DEVICES)}")
-    print(f"Email alerts to: {RECIPIENT_EMAIL if RECIPIENT_EMAIL else 'Not configured'}")
+    print(f"Email reports to: {RECIPIENT_EMAIL if RECIPIENT_EMAIL else 'Not configured'}")
+    print(f"Showing up to {MAX_HISTORY} measurements per device in email (all stored locally)")
     
-    # Create keepalive file path
-    keepalive_file = SCRIPT_DIR / "tmp" / "keepalive.td"
-    
-    while True:
-        # Check if keepalive file exists (system is running)
-        if not keepalive_file.exists():
-            print("Keepalive file not found. System may be shutting down. Exiting monitor.")
-            break
-            
-        try:
-            check_data_folders()
-        except Exception as e:
-            print(f"Error during check: {e}")
-        
-        print(f"\nNext check in {CHECK_INTERVAL / 3600} hours...")
-        time.sleep(CHECK_INTERVAL)
+    try:
+        check_data_folders()
+        print("\n✅ Data monitor check completed successfully")
+    except Exception as e:
+        print(f"❌ Error during check: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
