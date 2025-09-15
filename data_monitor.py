@@ -11,6 +11,7 @@ import time
 import smtplib
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 from email.message import EmailMessage
@@ -155,6 +156,29 @@ def format_size(size_bytes):
         size_bytes /= 1024.0
     return f"{size_bytes:.1f} PB"
 
+def get_disk_space(path="/"):
+    """Get disk space information for the given path (default: root filesystem)"""
+    try:
+        # Use shutil.disk_usage for cross-platform compatibility
+        total, used, free = shutil.disk_usage(path)
+        
+        return {
+            "total": total,
+            "used": used,
+            "free": free,
+            "used_percent": (used / total) * 100 if total > 0 else 0,
+            "path": path
+        }
+    except Exception as e:
+        print(f"Error getting disk space for {path}: {e}")
+        return {
+            "total": 0,
+            "used": 0,
+            "free": 0,
+            "used_percent": 0,
+            "path": path
+        }
+
 def send_email_alert(subject, body):
     """Send email alert"""
     if not all([SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL, RECIPIENT_EMAIL]):
@@ -199,13 +223,25 @@ def check_data_folders():
         print(f"Warning: User data directory not found: {user_data_dir}")
         return
     
+    # Get disk space information
+    disk_info = get_disk_space("/")
+    
     # Current measurement
     current_measurement = {
         "timestamp": current_timestamp,
-        "devices": {}
+        "devices": {},
+        "disk_space": disk_info
     }
     
     print(f"\n=== Data Monitor Check - {current_time.strftime('%Y-%m-%d %H:%M:%S')} ===")
+    
+    # Display disk space information
+    print(f"\n--- DISK SPACE ({disk_info['path']}) ---")
+    print(f"Total:       {format_size(disk_info['total'])}")
+    print(f"Used:        {format_size(disk_info['used'])} ({disk_info['used_percent']:.1f}%)")
+    print(f"Available:   {format_size(disk_info['free'])}")
+    
+    print(f"\n--- DEVICE FOLDERS ---")
     
     for device in DEVICES:
         # Special case for highlights - monitor directly in script directory
@@ -238,8 +274,27 @@ def generate_email_report(username, current_time, current_measurement, history):
     body = f"Data monitoring report for user: {username}\n"
     body += f"Report generated: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
     
+    # Add disk space information
+    disk_info = current_measurement.get("disk_space", {})
+    if disk_info:
+        body += "=== DISK SPACE OVERVIEW ===\n"
+        body += f"Path: {disk_info.get('path', 'N/A')}\n"
+        body += f"Total Space: {format_size(disk_info.get('total', 0))}\n"
+        body += f"Used Space:  {format_size(disk_info.get('used', 0))} ({disk_info.get('used_percent', 0):.1f}%)\n"
+        body += f"Free Space:  {format_size(disk_info.get('free', 0))}\n"
+        
+        # Add disk space warning if usage is high
+        used_percent = disk_info.get('used_percent', 0)
+        if used_percent > 90:
+            body += "🚨 WARNING: Disk usage is above 90%!\n"
+        elif used_percent > 80:
+            body += "⚠️ CAUTION: Disk usage is above 80%\n"
+        else:
+            body += "✅ Disk usage is within normal range\n"
+        body += "\n"
+    
     # Add current measurement info
-    body += "=== CURRENT MEASUREMENT ===\n"
+    body += "=== CURRENT DEVICE FOLDERS ===\n"
     for device in DEVICES:
         size = current_measurement["devices"][device]["size"]
         path = current_measurement["devices"][device]["path"]
@@ -251,6 +306,65 @@ def generate_email_report(username, current_time, current_measurement, history):
     if not history:
         body += "No previous measurements found. This is the first measurement.\n"
     else:
+        # Show disk space history first
+        body += "\n--- DISK SPACE HISTORY ---\n"
+        disk_history = []
+        
+        # Collect disk space history
+        for measurement in history:
+            if "disk_space" in measurement:
+                disk_history.append({
+                    "timestamp": measurement["timestamp"],
+                    "disk_space": measurement["disk_space"]
+                })
+        
+        # Add current measurement
+        if "disk_space" in current_measurement:
+            disk_history.append({
+                "timestamp": current_measurement["timestamp"],
+                "disk_space": current_measurement["disk_space"]
+            })
+        
+        # Sort by timestamp (oldest first)
+        disk_history.sort(key=lambda x: x["timestamp"])
+        
+        # Keep only the last MAX_HISTORY measurements for email display
+        if len(disk_history) > MAX_HISTORY:
+            disk_history = disk_history[-MAX_HISTORY:]
+        
+        # Display disk space history
+        for i, entry in enumerate(disk_history):
+            try:
+                timestamp = datetime.fromisoformat(entry["timestamp"])
+                time_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            except:
+                time_str = entry["timestamp"]
+            
+            disk_info = entry["disk_space"]
+            used = disk_info.get("used", 0)
+            total = disk_info.get("total", 0)
+            used_percent = disk_info.get("used_percent", 0)
+            
+            body += f"  {i+1}. {time_str}: {format_size(used)}/{format_size(total)} ({used_percent:.1f}% used)"
+            
+            # Check for changes compared to previous measurement
+            if i > 0:
+                prev_used = disk_history[i-1]["disk_space"].get("used", 0)
+                if used > prev_used:
+                    growth = used - prev_used
+                    body += f" (📈 +{format_size(growth)})"
+                elif used == prev_used:
+                    body += f" (➡️ No change)"
+                else:
+                    reduction = prev_used - used
+                    body += f" (📉 -{format_size(reduction)})"
+            
+            # Mark current measurement
+            if i == len(disk_history) - 1:
+                body += " ← CURRENT"
+            
+            body += "\n"
+        
         # Show history for each device
         for device in DEVICES:
             body += f"\n--- {device.upper()} HISTORY ---\n"
