@@ -8,10 +8,16 @@
 00 17 * * 1-5 (echo "$(date) - end time" >> ~/trust-me-setup/tmp/log.txt; /bin/bash ~/trust-me-setup/tmp/kill_processes.sh)
 # Start highlights extraction at 5:05 PM - launched a few minutes after stopping data recording
 05 17 * * 1-5 (echo "$(date) - generating highlights" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/highlights.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
-15 17 * * 1-5 echo "$(date) - rebooting shortly..." >> ~/trust-me-setup/tmp/log.txt
 
 # Put the following command into the root's crontab (sudo crontab -e)
-# Reboot at 5:30 PM - scheduled ~25 minutes after the highlight generation command
-30 17 * * * /sbin/reboot
+# Reboot at 6:30 AM - scheduled ~30 minutes before the start of the recording
+30 06 * * * /sbin/reboot
 
 # minutes hours days months weekdays(1-7)
+
+# a command for background video filtering (removing frames without faces + saving the number of detected faces in timestamps txt file)
+# I would put it ~30 mins after highlights generation and move reboot to happen shortly before the start of the next day, it needs some time to process all files
+# it works at around 30-40 fps, so it takes at least an hour to process 4 hours of videos
+# there are 2 scripts one could use: video_filter.sh filters only videos for TODAY and only for current username, while video_filter_all.sh filters all videos in 
+# all "hires" dirs of /data folder
+30 17 * * * (echo "$(date) - starting video filtering" >> ~/trust-me-setup/tmp/log.txt; bash ~/trust-me-setup/video_filter_all.sh >> ~/trust-me-setup/tmp/log.txt 2>&1)
