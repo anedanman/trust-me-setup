@@ -64,14 +64,29 @@ def compute_keep_segments(counts: List[int], fps: float, min_zero_seconds: float
 
 
 def check_if_processed(timestamps_path: str) -> bool:
-    """Check if the timestamp file already contains face counts."""
+    """Check if the timestamp file already contains face counts for frames.
+
+    Considered processed if:
+    - header contains 'face_count', and
+    - at least one data row has a third column (frame,timestamp,face_count)
+    """
     if not os.path.exists(timestamps_path):
         return False
-    
+
     try:
         with open(timestamps_path, "r") as f:
             header = f.readline().strip()
-            return "face_count" in header
+            if "face_count" not in header:
+                return False
+            # check at least one data line has 3 columns
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                parts = line.split(",")
+                if len(parts) >= 3:
+                    return True
+            return False
     except Exception:
         return False
 
@@ -307,25 +322,34 @@ def process_folder(input_folder: str, output_folder: Optional[str], min_zero_sec
     for i, video_file in enumerate(video_files, 1):
         print(f"\n[{i}/{len(video_files)}] Processing: {video_file.name}")
         
-        # Find corresponding timestamp file
-        # Video: Dani_Test_chunk0_2025-09-15$16-22-08-337539.mp4
-        # Timestamp: Dani_Test_timestamps_2025-09-15$16-22-08-337539.txt
+        # Find corresponding timestamp file generically.
+        # Rule: timestamps live in the same folder and are named
+        #   <user>_timestamps_<suffix>.txt
+        # where <suffix> matches the tail of the video name after the last underscore
+        # or, when chunked: replace _chunk<d>_ with _timestamps_.
+        import re
         base_name = video_file.stem
-        
-        # Remove chunk part from video filename to match timestamp filename
-        if "_chunk" in base_name:
-            # Extract the part after chunk number: Dani_Test_chunk0_2025-09-15$16-22-08-337539 -> 2025-09-15$16-22-08-337539
-            parts = base_name.split("_chunk")
-            if len(parts) == 2 and parts[1][0].isdigit():
-                # Remove chunk number and underscore: "0_2025-09-15$16-22-08-337539" -> "2025-09-15$16-22-08-337539"
-                timestamp_suffix = parts[1][2:]  # Remove "0_" or "1_" etc.
-                timestamp_name = f"Dani_Test_timestamps_{timestamp_suffix}.txt"
-            else:
-                timestamp_name = f"Dani_Test_timestamps_{base_name.split('Dani_Test_')[-1]}.txt"
+        suffix = base_name.split("_")[-1]
+
+        # Try pattern based on replacing chunk with timestamps
+        candidate1 = re.sub(r"_chunk\d+_", "_timestamps_", video_file.name)
+        candidate1 = os.path.splitext(candidate1)[0] + ".txt"
+        tp1 = video_file.parent / candidate1
+
+        # Fallback: any file matching *_timestamps_<suffix>.txt
+        pattern = f"*_timestamps_{suffix}.txt"
+        matches = list(video_file.parent.glob(pattern))
+
+        if tp1.exists():
+            timestamp_path = tp1
+        elif matches:
+            timestamp_path = matches[0]
         else:
-            timestamp_name = f"Dani_Test_timestamps_{base_name.split('Dani_Test_')[-1]}.txt"
-        
-        timestamp_path = video_file.parent / timestamp_name
+            # Last resort: search any *_timestamps_*.txt with same date token if present
+            date_token = extract_date_from_filename(video_file.name)
+            if date_token:
+                matches = list(video_file.parent.glob(f"*_timestamps_{date_token}*.txt"))
+            timestamp_path = matches[0] if matches else video_file.parent / (base_name + "_timestamps.txt")
         
         # Check if already processed
         if not force and check_if_processed(str(timestamp_path)):
@@ -425,7 +449,23 @@ def main():
             
     else:
         # Default behavior: process the default folder with in-place modification
-        default_folder = "data/Dani_Test/hires"
+        # Determine username from tmp/current_username if available
+        repo_root = Path(__file__).resolve().parent
+        username_file = repo_root / "tmp" / "current_username"
+        username = None
+        if username_file.exists():
+            try:
+                username = username_file.read_text().strip()
+            except Exception:
+                username = None
+        default_folder = str(repo_root / "data" / (username or "") / "hires") if username else str(repo_root / "data")
+
+        # If username not known, try to find any user/hires dir under data
+        if username is None:
+            candidates = list((repo_root / "data").glob("*/hires"))
+            if candidates:
+                default_folder = str(candidates[0])
+
         if os.path.exists(default_folder):
             print(f"No arguments provided. Processing default folder: {default_folder}")
             print("Using --in-place mode (original files will be overwritten)")

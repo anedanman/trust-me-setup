@@ -76,10 +76,10 @@ def get_username():
             return username
         else:
             print(f"Warning: Username file not found at {USERNAME_FILE}, using default")
-            return "Dani_Test"
+            return "empty_username"
     except Exception as e:
         print(f"Error reading username file: {e}, using default")
-        return "Dani_Test"
+        return "empty_username"
 
 def get_folder_size(folder_path):
     """Get the total size of a folder in bytes"""

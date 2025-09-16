@@ -10,11 +10,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Initialize conda
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
 
-if ! conda info > /dev/null 2>&1; 
-then
-  echo "Initializing conda"
-  conda init
-  exec bash
+if ! conda info > /dev/null 2>&1; then
+    echo "Conda not initialized or not available. Ensure Miniconda is installed at $HOME/miniconda3 and try again."
+    exit 1
 fi
 
 # Activate the tobii environment
@@ -52,20 +50,12 @@ total_errors=0
 
 echo "Searching for 'hires' directories with video files..."
 
-# Find all directories named 'hires' that contain .mp4 files
-video_dirs=$(find "$DATA_FOLDER" -type d -name "hires" -exec sh -c 'if ls "$1"/*.mp4 >/dev/null 2>&1; then echo "$1"; fi' _ {} \;)
+echo "Finding 'hires' directories with video files..."
 
-if [ -z "$video_dirs" ]; then
-    echo "No 'hires' directories with video files found in $DATA_FOLDER"
-    exit 0
-fi
-
-echo "Found 'hires' directories with videos:"
-echo "$video_dirs"
-echo
-
-# Process each directory
+# Process each directory as it is found (streaming)
+found_any=false
 while IFS= read -r dir; do
+    found_any=true
     echo "===== Processing directory: $dir ====="
     
     # Count videos in this directory
@@ -93,7 +83,12 @@ while IFS= read -r dir; do
     fi
     
     echo
-done <<< "$video_dirs"
+done < <(find "$DATA_FOLDER" -type d -name "hires" -exec sh -c 'd="$1"; ls "$d"/*.mp4 >/dev/null 2>&1 && echo "$d"' _ {} \;)
+
+if [ "$found_any" = false ]; then
+    echo "No 'hires' directories with video files found in $DATA_FOLDER"
+    exit 0
+fi
 
 echo "===== SUMMARY ====="
 echo "Total videos processed: $total_processed"
@@ -106,9 +101,11 @@ echo
 echo "===== ALREADY PROCESSED FILES ====="
 echo "The following files were skipped because they were already processed:"
 
-find "$DATA_FOLDER" -name "*timestamps*.txt" -exec grep -l "face_count" {} \; | while read -r timestamp_file; do
-    # Extract video name from timestamp file
-    video_name=$(basename "$timestamp_file" | sed 's/Dani_Test_timestamps_/Dani_Test_chunk0_/' | sed 's/\.txt$/.mp4/')
+find "$DATA_FOLDER" -name "*_timestamps_*.txt" -exec grep -l "face_count" {} \; | while read -r timestamp_file; do
+    # Derive the most likely corresponding video name generically by replacing _timestamps_ with _chunk0_
+    base=$(basename "$timestamp_file")
+    video_name="${base/_timestamps_/_chunk0_}"
+    video_name="${video_name%.txt}.mp4"
     video_dir=$(dirname "$timestamp_file")
     echo "  $video_dir/$video_name"
 done
