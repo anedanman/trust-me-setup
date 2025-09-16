@@ -367,9 +367,21 @@ def process_folder(input_folder: str, output_folder: Optional[str], min_zero_sec
             keep_segments = compute_keep_segments(counts, fps, min_zero_seconds)
             total_frames_kept = sum((e - s + 1) for s, e in keep_segments)
             total_frames = len(counts)
-            
+
             print(f"  Keep segments: {len(keep_segments)} | frames kept: {total_frames_kept}/{total_frames} ({100.0*total_frames_kept/total_frames:.1f}%)")
-            
+
+            # If no segments to keep: delete the original video when in-place, otherwise skip writing
+            if len(keep_segments) == 0:
+                if in_place:
+                    try:
+                        os.remove(str(video_file))
+                        print(f"  ✓ Deleted original video (no keepable segments): {video_file.name}")
+                    except Exception as de:
+                        print(f"  ✗ Failed to delete video {video_file.name}: {de}")
+                else:
+                    print("  ℹ️  No keepable segments; skipping output (not in-place mode)")
+                continue
+
             # Determine output path
             if in_place:
                 output_video_path = str(video_file)
@@ -442,10 +454,13 @@ def main():
         total_frames = len(counts)
         print(f"Keep segments: {len(keep_segments)} | frames kept: {total_frames_kept}/{total_frames} ({100.0*total_frames_kept/total_frames:.1f}%)")
 
-        if args.method == "ffmpeg":
-            write_output_ffmpeg(args.input, args.output, keep_segments, fps)
+        if len(keep_segments) == 0:
+            print("No segments to keep; skipping output write for single-file mode.")
         else:
-            write_output_opencv(args.input, args.output, keep_segments, fps, width, height)
+            if args.method == "ffmpeg":
+                write_output_ffmpeg(args.input, args.output, keep_segments, fps)
+            else:
+                write_output_opencv(args.input, args.output, keep_segments, fps, width, height)
             
     else:
         # Default behavior: process the default folder with in-place modification
