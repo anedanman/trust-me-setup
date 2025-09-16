@@ -304,9 +304,29 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
         # Calculate segment bounds
         start_time = max(0, relative_time - segment_duration/2)
         
-        # Output filename
+        # Extract and modify the video basename to reflect highlight timing
         video_basename = os.path.splitext(os.path.basename(video_file))[0]
-        output_file = os.path.join(highlight_dir, f"highlight_{i+1}_{video_basename}_t{relative_time:.1f}s_score{score:.3f}.mp4")
+        
+        # Calculate the actual timestamp when the highlight occurred
+        highlight_timestamp_ms = timestamp  # This is already the timestamp of the peak
+        
+        # Convert timestamp to datetime format matching the video filename pattern
+        import datetime
+        highlight_datetime = datetime.datetime.fromtimestamp(highlight_timestamp_ms / 1000.0)
+        highlight_time_str = highlight_datetime.strftime("%Y-%m-%d$%H-%M-%S-") + f"{int(highlight_timestamp_ms % 1000):06d}"
+        
+        # Replace the timestamp in video_basename with highlight timestamp
+        import re
+        # Pattern matches: YYYY-MM-DD$HH-MM-SS-microseconds
+        timestamp_pattern = r'(\d{4}-\d{2}-\d{2}\$\d{2}-\d{2}-\d{2}-\d{6})'
+        if re.search(timestamp_pattern, video_basename):
+            modified_basename = re.sub(timestamp_pattern, highlight_time_str, video_basename)
+        else:
+            # Fallback if pattern doesn't match
+            modified_basename = video_basename + f"_highlight_{highlight_time_str}"
+        
+        # Output filename
+        output_file = os.path.join(highlight_dir, f"highlight_{i+1}_{modified_basename}_t{relative_time:.1f}s_score{score:.3f}.mp4")
         
         try:
             # Load video with moviepy
