@@ -288,6 +288,58 @@ def write_output_ffmpeg(input_path: str, output_path: str, keep_segments: List[T
         shutil.rmtree(tempdir, ignore_errors=True)
 
 
+def write_minimal_output_opencv(input_path: str, output_path: str, fps: float, width: int, height: int):
+    """Write a minimal placeholder video (1 frame) using OpenCV.
+
+    Tries to use the first frame of the source; if not available, writes a black frame.
+    """
+    import numpy as np  # Lazy import to avoid hard dependency when using ffmpeg path
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Try to grab the first frame from the input
+    frame = None
+    cap = cv2.VideoCapture(input_path)
+    if cap.isOpened():
+        ok, fr = cap.read()
+        if ok:
+            frame = fr
+    cap.release()
+
+    if frame is None:
+        frame = np.zeros((int(height), int(width), 3), dtype=np.uint8)
+
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter(output_path, fourcc, max(fps, 1.0), (int(width), int(height)))
+    if not out.isOpened():
+        raise RuntimeError(f"Failed to open VideoWriter for minimal output: {output_path}")
+    out.write(frame)
+    out.release()
+
+
+def write_minimal_output_ffmpeg(input_path: str, output_path: str, fps: float, width: int, height: int):
+    """Write a minimal placeholder video (1 frame) using ffmpeg.
+
+    We extract a single frame and encode it as a short MP4 without audio.
+    """
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg not found in PATH. Install ffmpeg or use --method opencv.")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Encode exactly one frame; drop audio to avoid stream inconsistencies
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", input_path,
+        "-frames:v", "1",
+        "-r", f"{max(fps, 1.0):.6f}",
+        "-an",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
+        "-movflags", "+faststart",
+        output_path,
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+
 def process_folder(input_folder: str, output_folder: Optional[str], min_zero_seconds: float, 
                   resize_width: int, method: str, target_date: Optional[str] = None, 
                   in_place: bool = False, force: bool = False):
@@ -370,16 +422,44 @@ def process_folder(input_folder: str, output_folder: Optional[str], min_zero_sec
 
             print(f"  Keep segments: {len(keep_segments)} | frames kept: {total_frames_kept}/{total_frames} ({100.0*total_frames_kept/total_frames:.1f}%)")
 
-            # If no segments to keep: delete the original video when in-place, otherwise skip writing
+            # If no segments to keep: create minimal placeholder video instead of deleting/skipping
             if len(keep_segments) == 0:
+                # Determine output path first
                 if in_place:
-                    try:
-                        os.remove(str(video_file))
-                        print(f"  ✓ Deleted original video (no keepable segments): {video_file.name}")
-                    except Exception as de:
-                        print(f"  ✗ Failed to delete video {video_file.name}: {de}")
+                    output_video_path = str(video_file)
                 else:
-                    print("  ℹ️  No keepable segments; skipping output (not in-place mode)")
+                    if output_folder:
+                        output_path = Path(output_folder)
+                        output_video_path = str(output_path / f"{video_file.stem}_filtered{video_file.suffix}")
+                    else:
+                        output_video_path = str(video_file.parent / f"{video_file.stem}_filtered{video_file.suffix}")
+
+                try:
+                    if in_place:
+                        tmp_fd, tmp_path = tempfile.mkstemp(dir=str(video_file.parent), suffix=video_file.suffix)
+                        os.close(tmp_fd)
+                        try:
+                            if method == "ffmpeg":
+                                write_minimal_output_ffmpeg(str(video_file), tmp_path, fps, width, height)
+                            else:
+                                write_minimal_output_opencv(str(video_file), tmp_path, fps, width, height)
+                            os.replace(tmp_path, str(video_file))
+                            print(f"  ✓ Overwritten with minimal placeholder (no segments): {video_file.name}")
+                        except Exception as e:
+                            try:
+                                if os.path.exists(tmp_path):
+                                    os.remove(tmp_path)
+                            finally:
+                                pass
+                            raise e
+                    else:
+                        if method == "ffmpeg":
+                            write_minimal_output_ffmpeg(str(video_file), output_video_path, fps, width, height)
+                        else:
+                            write_minimal_output_opencv(str(video_file), output_video_path, fps, width, height)
+                        print(f"  ✓ Wrote minimal placeholder (no segments): {Path(output_video_path).name}")
+                except Exception as de:
+                    print(f"  ✗ Failed to write minimal placeholder for {video_file.name}: {de}")
                 continue
 
             # Determine output path
@@ -392,15 +472,30 @@ def process_folder(input_folder: str, output_folder: Optional[str], min_zero_sec
                 else:
                     output_video_path = str(video_file.parent / f"{video_file.stem}_filtered{video_file.suffix}")
             
-            # Write filtered video
-            if method == "ffmpeg":
-                write_output_ffmpeg(str(video_file), output_video_path, keep_segments, fps)
-            else:
-                write_output_opencv(str(video_file), output_video_path, keep_segments, fps, width, height)
-                
+            # Write filtered video (handle in-place safely)
             if in_place:
-                print(f"  ✓ Overwritten: {video_file.name}")
+                # Write to a temporary file in the same directory and replace atomically
+                tmp_fd, tmp_path = tempfile.mkstemp(dir=str(video_file.parent), suffix=video_file.suffix)
+                os.close(tmp_fd)
+                try:
+                    if method == "ffmpeg":
+                        write_output_ffmpeg(str(video_file), tmp_path, keep_segments, fps)
+                    else:
+                        write_output_opencv(str(video_file), tmp_path, keep_segments, fps, width, height)
+                    os.replace(tmp_path, str(video_file))
+                    print(f"  ✓ Overwritten: {video_file.name}")
+                except Exception as we:
+                    try:
+                        if os.path.exists(tmp_path):
+                            os.remove(tmp_path)
+                    finally:
+                        pass
+                    raise we
             else:
+                if method == "ffmpeg":
+                    write_output_ffmpeg(str(video_file), output_video_path, keep_segments, fps)
+                else:
+                    write_output_opencv(str(video_file), output_video_path, keep_segments, fps, width, height)
                 print(f"  ✓ Completed: {Path(output_video_path).name}")
             
         except Exception as e:
@@ -455,7 +550,15 @@ def main():
         print(f"Keep segments: {len(keep_segments)} | frames kept: {total_frames_kept}/{total_frames} ({100.0*total_frames_kept/total_frames:.1f}%)")
 
         if len(keep_segments) == 0:
-            print("No segments to keep; skipping output write for single-file mode.")
+            # Produce a minimal placeholder output
+            try:
+                if args.method == "ffmpeg":
+                    write_minimal_output_ffmpeg(args.input, args.output, fps, width, height)
+                else:
+                    write_minimal_output_opencv(args.input, args.output, fps, width, height)
+                print("Wrote minimal placeholder output (no segments to keep).")
+            except Exception as e:
+                print(f"Failed to write minimal placeholder output: {e}")
         else:
             if args.method == "ffmpeg":
                 write_output_ffmpeg(args.input, args.output, keep_segments, fps)
