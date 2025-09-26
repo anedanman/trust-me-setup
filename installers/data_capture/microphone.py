@@ -45,6 +45,19 @@ class Mic:
         # optional: track overflow without printing in callback
         self.overflow_count = 0
         self.last_status = ""
+        
+        self._blur_b = None        # FIR coeffs for temporal blur
+        self._blur_zi1 = self._blur_zi2 = self._blur_zi3 = None  # lfilter states
+        self._peak_slow = None     # running peak estimate
+        self._gain = 1.0           # smoothed output gain
+        
+        self._scramble_buf = np.zeros(0, dtype=np.float32)  # leftover samples between calls
+        self._frame_len = None
+        self._frames_per_group = 10   # ~240 ms if frame_len ~40 ms
+        self._xfade_len = 20
+        self._peak_slow = None       # for smoothed gain (no pops)
+        self._gain = 0.3
+
 
     # ------------------------------------------------------------------ #
     #  Callback                                                          #
@@ -190,43 +203,120 @@ class Mic:
     # ------------------------------------------------------------------ #
     def save_recording(self):
         """
-        Append processed audio to the current WAV:
-        - stereo → mono
-        - low-pass @ 1 kHz
-        - resample to 8 kHz
-        - normalize, int16
+        Time-scramble within short windows to reduce intelligibility but keep the scene feel:
+        - mono mix
+        - slice into ~40 ms frames
+        - randomize frame order within ~240 ms groups
+        - short crossfade between frames to avoid clicks
+        - smoothed output gain (no per-chunk pops)
+        - optional resample to self.final_rate
+        - append to the already-open WAV (self.wf)
         """
         if not self.recording or self.wf is None:
             return
 
-        # move buffered blocks out atomically
+        # Pull pending callback blocks and clear queue quickly
         blocks, self.recording = self.recording, []
         x = np.concatenate(blocks, axis=0).astype(np.float32)
+        if x.size == 0:
+            return
 
-        # stereo → mono
+        # Stereo → mono
         if x.ndim == 2 and x.shape[1] == 2:
             x = x.mean(axis=1)
 
-        # brick-wall low-pass @ 1 kHz
-        cutoff = 1000 / (0.5 * self.sampling_rate)
-        b, a = sps.butter(8, cutoff, btype='low')
-        x = sps.filtfilt(b, a, x)
+        fs = int(self.sampling_rate)
 
-        # resample to 8 kHz
-        target_rate = self.final_rate  # 8000 by default
-        new_len = int(len(x) * target_rate / self.sampling_rate)
-        if new_len <= 0:
+        # --- initialize frame & xfade lengths once (40 ms frames, 5 ms crossfade)
+        if self._frame_len is None:
+            self._frame_len = max(160, int(0.040 * fs))   # ≥160 samples safeguard
+        if self._xfade_len is None:
+            self._xfade_len = max(32, min(self._frame_len // 4, int(0.005 * fs)))
+
+        frame_len = self._frame_len
+        xfade = self._xfade_len
+        group_frames = int(self._frames_per_group)
+
+        # Accumulate with leftover from previous call
+        buf = np.concatenate([self._scramble_buf, x])
+        n_full_frames = buf.size // frame_len
+        n_groups = n_full_frames // group_frames
+        n_use_frames = n_groups * group_frames
+        n_use_samples = n_use_frames * frame_len
+
+        if n_use_frames == 0:
+            # Not enough for one full group: keep as leftover for next call
+            self._scramble_buf = buf
             return
-        x = sps.resample(x, new_len)
 
-        # normalize & convert to int16
-        peak = np.max(np.abs(x)) or 1.0
-        pcm16 = np.int16(x / peak * 0.7071 * 32767)
+        # Reshape into groups x frames x samples
+        frames = buf[:n_use_samples].reshape(n_groups, group_frames, frame_len)
 
-        # append frames
+        # Prepare fades
+        fade_in = np.linspace(0.0, 1.0, xfade, dtype=np.float32)
+        fade_out = fade_in[::-1]
+
+        out_chunks = []
+        prev_tail = None
+
+        # Process each group: permute frames and crossfade joins
+        for g in range(n_groups):
+            order = np.random.permutation(group_frames)
+            for idx, fidx in enumerate(order):
+                frm = frames[g, fidx, :]
+
+                if prev_tail is None:
+                    # first frame: just store
+                    out_chunks.append(frm.astype(np.float32, copy=False))
+                    prev_tail = out_chunks[-1]
+                else:
+                    # crossfade boundary: last xfade of previous with first xfade of current
+                    a = prev_tail[-xfade:] * fade_out
+                    b = frm[:xfade] * fade_in
+                    xfd = a + b
+
+                    # assemble: (prev without its last xfade) + xfade + (rest of current)
+                    out_chunks[-1] = np.concatenate([out_chunks[-1][:-xfade], xfd], axis=0)
+                    out_chunks.append(frm[xfade:].astype(np.float32, copy=False))
+                    prev_tail = out_chunks[-1]
+
+        y = np.concatenate(out_chunks, axis=0)
+
+        # Keep leftover (anything after the processed region)
+        self._scramble_buf = buf[n_use_samples:]
+
+        # --- Output rate (skip resample if already matching)
+        target_rate = int(self.final_rate)
+        if target_rate != fs:
+            from fractions import Fraction
+            frac = Fraction(target_rate, fs).limit_denominator(1000)
+            y = sps.resample_poly(y, frac.numerator, frac.denominator).astype(np.float32)
+
+        # --- Smoothed gain to avoid level jumps (no per-block hard normalize)
+        block_peak = float(np.max(np.abs(y)) if y.size else 0.0) or 1e-6
+        if self._peak_slow is None:
+            self._peak_slow = block_peak
+
+        # quick attack, slower release
+        alpha_up, alpha_dn = 0.35, 0.05
+        a = alpha_up if block_peak > self._peak_slow else alpha_dn
+        self._peak_slow = a * block_peak + (1 - a) * self._peak_slow
+
+        target_lin = 10.0 ** (-10.0 / 20.0)  # ≈ -1 dBFS
+        desired_gain = target_lin / max(self._peak_slow, 1e-6)
+        self._gain = 0.2 * desired_gain + 0.8 * self._gain
+
+        y = np.clip(y * self._gain, -1.0, 1.0)
+
+        # Write as int16
+        pcm16 = np.int16(y * 32767)
         try:
             self.wf.writeframes(pcm16.tobytes())
         except Exception as e:
-            # don't crash capture on transient disk errors
             print(f"Audio write error: {e}")
+
+
+
+
+
 
