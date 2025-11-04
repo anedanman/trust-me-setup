@@ -1,5 +1,9 @@
 # ActivityWatch installer
-Download and install the Activity Watch v0.13.2 application from the [official page](https://github.com/ActivityWatch/activitywatch/releases). It supports Windows ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-windows-x86_64-setup.exe)), Linux ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-linux-x86_64.zip)), and MacOS ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-macos-x86_64.dmg)). It will track the active window (application) and log its title. To enable tracking the fruequencies of keystrokes and mouse movement data, klick on ActivityWatch icon, go to modules, and make sure aw-watcher-input is active (checkmark is there). Allow it to run in the background, enable start on boot, and allow input monitoring if required. 
+Download and install the Activity Watch v0.13.2 application from the [official page](https://github.com/ActivityWatch/activitywatch/releases). It supports Windows ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-windows-x86_64-setup.exe)), Linux ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-linux-x86_64.zip)), and MacOS ([download here](https://github.com/ActivityWatch/activitywatch/releases/download/v0.13.2/activitywatch-v0.13.2-macos-x86_64.dmg)). It will track the active window (application) and log its title. 
+
+To enable tracking the fruequencies of keystrokes and mouse movement data, klick on ActivityWatch icon, go to modules and make sure aw-watcher-input is active (checkmark is there). This is disabled by default and turns off with each reboot, I don't know if there is a way to make it enabled by default. 
+
+Allow it to run in the background and do input monitoring, enable start on boot if required. 
 
 ## Check if it works
-If everything is set up correctly, you should see the data in the ActivityWatch dashboard, which is accessible at `[http://localhost:5600](http://localhost:5600/#/timeline)`.
+If everything is set up correctly, you should see the data in the ActivityWatch dashboard, which is accessible at [http://localhost:5600](http://localhost:5600/#/timeline).
