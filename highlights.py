@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import glob
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import subprocess
 from moviepy.editor import VideoFileClip
 
@@ -274,7 +274,7 @@ def find_top_n_peaks(df, n, delta):
     
     return selected_peaks
 
-def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
+def extract_highlights(df, peaks, highlight_dir, start_date, segment_duration=60):
     """
     Extract video segments based on identified peaks of most interest and save them to highlight_dir.
     
@@ -282,10 +282,16 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
         df: DataFrame containing 'interest_score', and 'timestamp' columns
         peaks: List of tuples with peak timestamps and corresponding video files
         highlight_dir: Directory to save extracted video segments
+        start_date: Start timestamp string for the recording in format YYYY-MM-DD$HH-MM-SS-ffffff
         segment_duration: Duration of each highlight segment in seconds
     """
     from pathlib import Path
     Path(highlight_dir).mkdir(parents=True, exist_ok=True)
+
+    if not start_date:
+        raise ValueError("start_date is required to compute highlight timestamps")
+
+    start_dt = datetime.strptime(start_date, '%Y-%m-%d$%H-%M-%S-%f')
     
     for i, (idx, timestamp, score, video_file) in enumerate(peaks):
         if pd.isna(video_file):
@@ -307,13 +313,9 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
         # Extract and modify the video basename to reflect highlight timing
         video_basename = os.path.splitext(os.path.basename(video_file))[0]
         
-        # Calculate the actual timestamp when the highlight occurred
-        highlight_timestamp_ms = timestamp  # This is already the timestamp of the peak
-        
-        # Convert timestamp to datetime format matching the video filename pattern
-        import datetime
-        highlight_datetime = datetime.datetime.fromtimestamp(highlight_timestamp_ms / 1000.0)
-        highlight_time_str = highlight_datetime.strftime("%Y-%m-%d$%H-%M-%S-") + f"{int(highlight_timestamp_ms % 1000):06d}"
+        # Calculate the actual timestamp when the highlight occurred relative to recording start
+        highlight_datetime = start_dt + timedelta(milliseconds=timestamp)
+        highlight_time_str = highlight_datetime.strftime("%Y-%m-%d$%H-%M-%S-%f")
         
         # Replace the timestamp in video_basename with highlight timestamp
         import re
@@ -326,7 +328,7 @@ def extract_highlights(df, peaks, highlight_dir, segment_duration=60):
             modified_basename = video_basename + f"_highlight_{highlight_time_str}"
         
         # Output filename
-        output_file = os.path.join(highlight_dir, f"highlight_{i+1}_{modified_basename}_t{relative_time:.1f}s_score{score:.3f}.mp4")
+        output_file = os.path.join(highlight_dir, f"highlight_{i+1}_{modified_basename}.mp4")
         
         try:
             # Load video with moviepy
@@ -617,7 +619,7 @@ def main(date: str = None, user: str = None, eye_dir: str = None, video_dir: str
     
     # Extract highlights
     print("Extracting highlights...")
-    extract_highlights(df, peaks, highlight_dir)
+    extract_highlights(df, peaks, highlight_dir, start_date)
     print("Done!")
 
 
@@ -644,4 +646,3 @@ if __name__ == "__main__":
         number_of_highlights=args.highlights,
         delta_seconds=args.separation
     )
-
